@@ -1,0 +1,6 @@
+# book2md 项目自身
+# 测试样本是二进制资源：不进语言统计，diff 里折叠
+samples/*.epub binary linguist-vendored
+samples/*.pdf binary linguist-vendored
+samples/*.jpg binary linguist-vendored
+samples/*.png binary linguist-vendored

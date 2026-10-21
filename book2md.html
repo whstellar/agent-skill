@@ -1,0 +1,3889 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-v="2026-10-21.8">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>book2md v2026-10-20 · EPUB/PDF → Markdown → GitHub</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --line:#e3e6ea; --line2:#eef0f3;
+    --text:#1b1f24; --text2:#57606a; --muted:#8b949e;
+    --brand:#3b5bdb; --brand-d:#2f49b2; --ok:#1a7f37; --warn:#9a6700; --err:#c1121f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:22px 20px 80px}
+
+  /* ---------- 版本条：确认打开的是新文件 ---------- */
+  .verbar{
+    font-size:11.5px;color:var(--muted);margin-bottom:10px;
+    padding:5px 10px;background:#eef2ff;border:1px solid #d5ddfb;border-radius:7px;
+  }
+  .verbar b{color:#34418f;font-weight:600}
+
+  /* ---------- 顶栏：仓库连接 ---------- */
+  .top{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+  .top-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .field{display:flex;align-items:center;gap:7px;background:#fbfcfd;border:1px solid var(--line);border-radius:8px;padding:5px 10px;flex:1;min-width:180px}
+  .field .lbl{font-size:11px;color:var(--muted);flex:none}
+  .field input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:13px;outline:none;color:var(--text)}
+  .field input::placeholder{color:#b6bcc4}
+  .dot{width:8px;height:8px;border-radius:50%;background:#d0d7de;flex:none}
+  .dot.on{background:var(--ok)}
+
+  button{font:inherit;font-size:13px;border-radius:8px;border:1px solid var(--line);background:#fff;padding:7px 13px;cursor:pointer;color:var(--text2);white-space:nowrap}
+  button:hover:not(:disabled){background:#f6f8fa}
+  button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  button.primary:hover:not(:disabled){background:var(--brand-d)}
+  button:disabled{opacity:.42;cursor:not-allowed}
+  button.sm{font-size:12px;padding:5px 10px}
+  button.danger{color:#cf222e;border-color:#f0b8bb}
+  button.danger:hover:not(:disabled){background:#fdecec}
+  input[type=text],input[type=password],textarea{font:inherit}
+
+  /* ---------- 仓库书籍管理（改名 / 删除） ---------- */
+  .repo-panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-bottom:10px;overflow:hidden}
+  .rp-hd{display:flex;align-items:center;gap:9px;padding:8px 13px;border-bottom:1px solid var(--line);font-size:12.5px}
+  .rp-hd .sp{flex:1}
+  .rp-list{display:flex;flex-direction:column}
+  .rp-row{display:flex;align-items:center;gap:8px;padding:8px 13px;border-top:1px solid var(--line);font-size:12.5px;flex-wrap:wrap}
+  .rp-row:first-child{border-top:none}
+  .rp-row.gone{opacity:.5}
+  .rp-name{font-weight:600;min-width:110px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rp-meta{color:var(--muted);font-size:11.5px;flex:1;min-width:110px}
+  .rp-row input[type=text]{flex:none;width:190px;font-size:12px;padding:4px 8px}
+  .rp-tip{padding:14px 13px;color:var(--muted);font-size:12.5px}
+
+  /* ---------- 投放区 ---------- */
+  .drop{border:1.5px dashed #d0d7de;border-radius:10px;background:var(--panel);padding:24px;text-align:center;cursor:pointer;margin-bottom:12px}
+  .drop:hover,.drop.over{border-color:var(--brand);background:#f4f6ff}
+  .drop b{display:block;font-size:14px;margin-bottom:3px;font-weight:560}
+  .drop span{font-size:12px;color:var(--muted)}
+  .drop input{display:none}
+
+  /* ---------- 进度（常驻） ---------- */
+  .prog{display:flex;align-items:center;gap:12px;padding:9px 14px;margin-bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  .prog.off{opacity:.4}
+  .prog-txt{flex:1;min-width:0;font-size:12.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .prog-txt b{color:var(--text);font-weight:600}
+  .track{flex:0 0 200px;height:5px;background:var(--line2);border-radius:3px;overflow:hidden}
+  .track i{display:block;height:100%;width:0;background:var(--brand);transition:width .25s}
+  .pct{font-size:11.5px;color:var(--muted);width:34px;text-align:right;font-variant-numeric:tabular-nums}
+
+  /* ---------- 书目：紧凑行 ---------- */
+  .list{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+  .row{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .row-h{display:flex;align-items:center;gap:10px;padding:9px 13px;cursor:pointer}
+  .row-h:hover{background:#fbfcfd}
+  .row-h .caret{flex:none;color:var(--muted);font-size:10px;transition:transform .15s;display:inline-block}
+  .row.open .row-h .caret{transform:rotate(90deg)}
+  .row-h .quick{display:inline-flex;gap:6px;flex:none}
+  .row.open .row-h .quick{display:none}
+  .row-b{padding:9px 13px 11px;border-top:1px solid var(--line2);display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+  .row:not(.open) .row-b{display:none}
+  .ftype{flex:none;width:34px;height:34px;border-radius:7px;display:grid;place-items:center;font-size:9.5px;font-weight:700;color:#fff;background:#8b949e}
+  .ftype.epub{background:#6657c8} .ftype.pdf{background:#c05621}
+  .fname{flex:1;min-width:0}
+  .fname b{display:block;font-size:13.5px;font-weight:560;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fname span{font-size:11.5px;color:var(--muted)}
+  .tag{flex:none;font-size:11px;padding:2.5px 9px;border-radius:20px;font-weight:560;background:#eef1f5;color:var(--text2)}
+  .tag.ok{background:#e7f6ec;color:var(--ok)}
+  .tag.warn{background:#fff4e5;color:var(--warn)}
+  .tag.err{background:#fdecec;color:var(--err)}
+  .tag.busy{background:#e8ecfd;color:var(--brand)}
+  .row-b input[type=text]{flex:1;min-width:160px;font-size:12.5px;padding:5px 9px;border:1px solid var(--line);border-radius:7px;outline:none}
+  .row-b textarea{width:100%;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;padding:8px;border:1px solid var(--line);border-radius:7px;outline:none;resize:vertical;margin-top:7px}
+  .warnbox{width:100%;padding:7px 10px;border-radius:7px;background:#fff8e8;font-size:11.5px;color:var(--warn);line-height:1.5}
+  .errbox{width:100%;padding:7px 10px;border-radius:7px;background:#fdecec;font-size:11.5px;color:var(--err);line-height:1.5}
+  .pv{border:1px solid var(--line);border-radius:7px;padding:10px;margin-top:7px;background:#fff;overflow:auto;max-height:400px;font-size:13px}
+
+  /* ---------- 汇总 / 自检 ---------- */
+  .ck-panel{margin-bottom:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+  .ck-panel.sum{display:flex;align-items:center;gap:9px;padding:8px 13px}
+  .dup-hint{margin-bottom:10px;padding:9px 13px;border:1px solid #f0c36d;border-left:3px solid #d4a72c;
+            border-radius:8px;background:#fff8e6;color:#6b4c00;font-size:12.5px;line-height:1.7}
+  input.dup,input.dup:focus{border-color:#cf222e!important;box-shadow:0 0 0 2px rgba(207,34,46,.12)!important}
+  .ck-hd{display:flex;align-items:center;gap:9px;padding:8px 13px;cursor:pointer;font-size:12.5px}
+  .ck-hd:hover{background:#fbfcfd}
+  .ck-badge{flex:none;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600}
+  .ck-badge.ok{background:#e7f6ec;color:var(--ok)}
+  .ck-badge.warn{background:#fff4e5;color:var(--warn)}
+  .ck-badge.err{background:#fdecec;color:var(--err)}
+  .ck-sum{flex:1;min-width:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ck-toggle{color:var(--muted);font-size:11px}
+  .ck-list{list-style:none;margin:0;padding:0 0 6px}
+  .ck-list li{display:flex;gap:7px;padding:4px 13px;font-size:11.5px;line-height:1.5;color:var(--text2)}
+  .ck-list li.err{color:#a0131d} .ck-list li.warn{color:#8a5a00}
+
+  /* ---------- 操作区 ---------- */
+  .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .acts .sp{flex:1}
+  .adv{display:flex;gap:14px;flex-wrap:wrap;padding:9px 13px;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-size:12px;color:var(--muted)}
+  .adv label{display:flex;gap:5px;align-items:center;cursor:pointer}
+
+  /* ---------- 日志 ---------- */
+  .logbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:10px}
+  .logbox summary{padding:9px 13px;cursor:pointer;font-size:12.5px;color:var(--text2);list-style:none;display:flex;align-items:center;gap:7px}
+  .logbox summary::-webkit-details-marker{display:none}
+  .logbox summary:before{content:"\25B8";color:var(--muted);font-size:10px}
+  .logbox[open] summary:before{content:"\25BE"}
+  .log{max-height:300px;overflow:auto;padding:0 13px 12px;font:11.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text2);white-space:pre-wrap}
+  .log .ok{color:var(--ok)} .log .err{color:var(--err)} .log .warn{color:var(--warn)} .log .info{color:var(--text2)}
+  .empty{text-align:center;padding:34px 20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 版本标识：一眼确认打开的是新文件还是旧文件（目录里还有 preview_sample.html 等旧版） -->
+  <div class="verbar">book2md <b>v2026-10-21.6</b> · 重复配图只传一份 · 原件按需算 · 星号不再露出 · 大书编辑不卡 · 重名会拦 · 逐字加粗自动并接头 · 预览与 GitHub 一致 · 预览能看真图 · 存成 HTML · 首页带封面与生成时间 · 无封面自动补 · 跳过原因会明说 · 标题不跳级</div>
+
+  <!-- 1 仓库连接 -->
+  <div class="top">
+    <div class="top-row">
+      <span class="dot" id="repoDot"></span>
+      <div class="field"><span class="lbl">仓库</span><input type="text" id="repo" placeholder="owner/repo 或仅名字" autocomplete="off" /></div>
+      <div class="field" style="flex:0 1 220px"><span class="lbl">Token</span><input type="password" id="token" placeholder="ghp_..." autocomplete="off" /></div>
+      <label class="adv" style="padding:5px 10px"><input type="checkbox" id="visibility" /> 私有</label>
+      <button class="sm" id="btnRepo">打开</button>
+    </div>
+  </div>
+
+  <!-- 2 投放 -->
+  <div class="drop" id="drop">
+    <input type="file" id="fileInput" accept=".pdf,.epub" multiple />
+    <b>拖入 EPUB / PDF，或点击选择（可多选）</b>
+    <span>EPUB 自动转成 Markdown · PDF 原样上传</span>
+  </div>
+
+  <!-- 3 进度 -->
+  <div class="prog off" id="prog1">
+    <div class="prog-txt" id="progTxt">空闲</div>
+    <div class="track"><i id="progBar"></i></div>
+    <div class="pct" id="progPct">0%</div>
+  </div>
+
+  <!-- 4 自检汇总 -->
+  <div class="ck-panel sum" id="ckSum" style="display:none"></div>
+
+  <!-- 4.5 文件夹重名提示：两本书撞同一个目录会静默覆盖，必须让人看见 -->
+  <div class="dup-hint" id="dupHint" style="display:none"></div>
+
+  <!-- 5 书目 -->
+  <div class="list" id="bookList"></div>
+  <div class="empty" id="emptyHint">还没有文件。上面拖进来就能开始。</div>
+
+  <!-- 6 操作 -->
+  <div class="acts">
+    <button class="primary" id="uploadAll" disabled>上传全部已就绪</button>
+    <button id="convertAll" disabled>转换全部待处理</button>
+    <button class="sm" id="refreshBtn" disabled>读取仓库</button>
+    <button class="sm" id="manageBtn" disabled title="改名或删除仓库里已经有的书">管理仓库书籍</button>
+    <button class="sm" id="rebuildBtn" disabled title="重新扫描仓库并在首页重建书目">重建首页</button>
+    <div class="sp"></div>
+    <button class="sm" id="clearAll" disabled>清空</button>
+  </div>
+
+  <!-- 6.5 仓库里已有的书：改名 / 删除 -->
+  <div class="repo-panel" id="repoPanel" style="display:none">
+    <div class="rp-hd">
+      <b>仓库里的书</b>
+      <span class="ck-sum" id="rpTip">读取中…</span>
+      <div class="sp"></div>
+      <button class="sm" id="rpReload">重新读取</button>
+      <button class="sm" id="rpClose">收起</button>
+    </div>
+    <div class="rp-list" id="rpList"></div>
+  </div>
+
+  <div class="adv">
+    <label><input type="checkbox" id="batchCommit" checked /> 整本书合并为 1 个提交</label>
+    <label><input type="checkbox" id="autoConvert" checked /> 加入文件后自动转换</label>
+    <label title="勾上后，仓库里同名的文件一律不覆盖——哪怕你本地的内容已经变了。想更新已上传的书，请保持不勾。"><input type="checkbox" id="skipExistingAll" /> 已存在文件一律不覆盖（内容变了也不覆盖）</label>
+    <label><input type="checkbox" id="keepOrigAll" /> 保留 EPUB 原件</label>
+  </div>
+
+  <!-- 7 日志 -->
+  <details class="logbox" id="logBox">
+    <summary>运行日志</summary>
+    <div class="log" id="log">（暂无）</div>
+  </details>
+
+</div>
+<script>
+
+/* =========================================================================
+   1. 基础工具
+   ========================================================================= */
+const $ = id => document.getElementById(id);
+const enc = new TextEncoder();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* 让浏览器有机会重绘一帧（转换整章是纯同步的 DOM 活，连着跑进度条就定住不动）。
+   setTimeout(0) 是宏任务，能让浏览器插入一次绘制。
+   但每次都让出会把转换拖慢（浏览器对嵌套定时器有 ~4ms 下限，实测 300 章的书能慢 20%+），
+   所以加了节流：两次重绘之间至少隔 100ms 的活儿 —— 一秒更新十次，看着就是连续的，
+   而让出的开销压到总耗时的百分之几。收尾那次强制让出。 */
+let _lastPaint = 0;
+async function paint(force){
+  const now = Date.now();
+  if(!force && now - _lastPaint < 100) return;
+  _lastPaint = now;
+  await sleep(0);
+}
+
+function escapeHtml(s){
+  return (s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+function fmtSize(n){
+  if(!n && n !== 0) return '-';
+  if(n < 1024) return n + ' B';
+  if(n < 1048576) return (n/1024).toFixed(1) + ' KB';
+  return (n/1048576).toFixed(2) + ' MB';
+}
+/**
+ * 给没有封面的书生成一张文字封面（SVG）。
+ *
+ * PDF 和直接上传的 .md **本来就不带封面** —— 封面只在解析 EPUB 时从 OPF 里取，
+ * 这两条路径压根没有这一步。于是 README 里那一格只能写「无封面」，
+ * 一排书看过去像坏了几本，其实是源文件就没有。
+ *
+ * 这里补一张纯静态 SVG：底色按书名哈希取（同一本书永远同一个色），书名居中，
+ * 底部标文件类型。几 KB、零依赖、GitHub 直接渲染。
+ * 故意做成"一看就是占位"的样子（浅色底 + 虚线框），不冒充真封面。
+ */
+/**
+ * 导出一份**自包含**的 HTML：图片全部内嵌成 data URI。
+ *
+ * 为什么要这个：网页里的预览是临时的，关了页面就没了；而且预览区窄、图看不全。
+ * 存成 HTML 之后可以用浏览器全屏看、可以搜、可以发给别人确认，不发原书也不会裂图。
+ * 上传前先看一遍，比传上去再回滚省事得多。
+ */
+function exportPreviewHtml(b){
+  const mimeOf = name => {
+    const ext = (String(name).match(/\.([a-z0-9]+)$/i) || [, 'jpg'])[1].toLowerCase();
+    return ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif'
+         : ext === 'svg' ? 'image/svg+xml' : ext === 'webp' ? 'image/webp'
+         : ext === 'bmp' ? 'image/bmp' : 'image/jpeg';
+  };
+  const map = new Map();
+  for(const [name, bytes] of (b.images || [])){
+    try{ map.set('images/' + name, 'data:' + mimeOf(name) + ';base64,' + bytesToBase64(bytes)); }catch(e){}
+  }
+  const title = String((b.meta && b.meta.title) || b.folder || b.name || 'book').trim();
+  const body = renderMdPreview(b.markdown || '', map);
+  const chars = (b.markdown || '').length;
+
+  const css = [
+    ':root{color-scheme:light}',
+    '*{box-sizing:border-box}',
+    'body{margin:0;padding:28px 20px 90px;background:#fff;color:#1f2328;',
+    'font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}',
+    '.meta{max-width:820px;margin:0 auto 26px;padding-bottom:12px;border-bottom:1px solid #d8dee4;',
+    'color:#59636e;font-size:13px;display:flex;gap:16px;flex-wrap:wrap}',
+    'article{max-width:820px;margin:0 auto}',
+    'h1,h2,h3,h4,h5,h6{line-height:1.3;margin:1.5em 0 .6em;font-weight:600}',
+    'h1{font-size:1.85em;border-bottom:1px solid #d8dee4;padding-bottom:.3em;margin-top:0}',
+    'h2{font-size:1.45em;border-bottom:1px solid #d8dee4;padding-bottom:.3em}',
+    'h3{font-size:1.2em}h4{font-size:1.05em}h5{font-size:1em}h6{font-size:.95em;color:#59636e}',
+    'p{margin:.85em 0}a{color:#0969da;text-decoration:none}a:hover{text-decoration:underline}',
+    'img{max-width:100%;height:auto;display:block;margin:1.1em auto;border-radius:4px}',
+    'blockquote{margin:1em 0;padding:0 1em;color:#59636e;border-left:.25em solid #d0d7de}',
+    'code{background:#f6f8fa;padding:.2em .4em;border-radius:4px;font-size:.9em;',
+    'font-family:ui-monospace,SFMono-Regular,Consolas,monospace}',
+    'pre{background:#f6f8fa;padding:14px;border-radius:6px;overflow:auto}',
+    'pre code{background:none;padding:0}',
+    'table{border-collapse:collapse;margin:1em 0;display:block;overflow:auto;max-width:100%}',
+    'th,td{border:1px solid #d0d7de;padding:6px 13px}',
+    'th{background:#f6f8fa;font-weight:600}',
+    'hr{border:none;border-top:1px solid #d8dee4;margin:2em 0}',
+    'ul,ol{padding-left:1.8em;margin:.85em 0}li{margin:.3em 0}del{color:#8b949e}'
+  ].join('');
+
+  return '<!doctype html><html lang="zh-CN"><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>' + escapeHtml(title) + '</title>'
+    + '<style>' + css + '</style><body>'
+    + '<div class="meta"><b>' + escapeHtml(title) + '</b>'
+    + '<span>book2md 本地预览</span>'
+    + '<span>' + (b.images || []).length + ' 张配图</span>'
+    + '<span>' + chars + ' 字符</span></div>'
+    + '<article>' + body + '</article></body></html>';
+}
+
+function makeTextCover(title, kind){
+  const esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const name = String(title || '').trim() || '未命名';
+  let hue = 0;
+  for(let i = 0; i < name.length; i++) hue = (hue * 31 + name.charCodeAt(i)) % 360;
+
+  /* 折行按**视觉宽度**算，不能按字符个数。
+     按个数折的话 "博弈skill"（7 个字符）会被切成 "博弈skil" + "l" —— 明显是坏的。
+     中文算 1，拉丁/数字算 0.55，一行最多 6 个中文字的宽度。 */
+  const chars = Array.from(name);
+  const charW = c => c.charCodeAt(0) < 0x2e80 ? 0.55 : 1;
+  const MAXW = 6;
+  const lines = [];
+  let i = 0;
+  while(i < chars.length && lines.length < 3){
+    while(i < chars.length && chars[i] === ' ') i++;   // 新行不以空格开头（英文书名）
+    let cur = '', w = 0;
+    while(i < chars.length && w + charW(chars[i]) <= MAXW + 1e-6){
+      cur += chars[i]; w += charW(chars[i]); i++;
+    }
+    if(!cur){ cur = chars[i]; i++; }        // 兜底：单字符就超宽
+    lines.push(cur);
+  }
+  if(i < chars.length) lines[lines.length - 1] = lines[lines.length - 1].slice(0, -1) + '…';
+
+  const fs = lines.length === 1 ? 52 : lines.length === 2 ? 44 : 36;
+  const gap = Math.round(fs * 1.22);
+  const firstY = Math.round(200 - ((lines.length - 1) * gap) / 2);
+  const tspans = lines.map((ln, i) =>
+    '<tspan x="150"' + (i ? ' dy="' + gap + '"' : '') + '>' + esc(ln) + '</tspan>').join('');
+
+  const label = kind === 'pdf' ? 'PDF' : kind === 'epub' ? 'EPUB' : 'MARKDOWN';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">\n'
+    + '<rect width="300" height="400" fill="hsl(' + hue + ',30%,93%)"/>\n'
+    + '<rect x="12" y="12" width="276" height="376" rx="8" fill="none" stroke="hsl(' + hue + ',26%,76%)" stroke-width="2" stroke-dasharray="7 6"/>\n'
+    + '<text x="150" y="' + firstY + '" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'PingFang SC\',\'Microsoft YaHei\',sans-serif" '
+    + 'font-size="' + fs + '" font-weight="600" fill="hsl(' + hue + ',38%,27%)">' + tspans + '</text>\n'
+    + '<text x="150" y="352" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif" '
+    + 'font-size="15" letter-spacing="3" fill="hsl(' + hue + ',18%,48%)">' + label + '</text>\n'
+    + '</svg>';
+}
+
+/** 字数：中文阅读习惯用「万」计量，不足一万照实写 */
+function fmtChars(n){
+  const v = Number(n) || 0;
+  if(!v) return '';
+  if(v >= 10000) return (Math.round(v / 1000) / 10) + ' 万字';
+  return v + ' 字';
+}
+function baseName(p){ return String(p).split('/').pop(); }
+function dirName(p){ const i = String(p).lastIndexOf('/'); return i < 0 ? '' : String(p).slice(0, i); }
+
+/** 路径规范化：解析 . 与 .. */
+function normPath(base, rel){
+  const parts = (base ? base.split('/') : []).concat(String(rel).split('/'));
+  const out = [];
+  for(const p of parts){
+    if(!p || p === '.') continue;
+    if(p === '..'){ out.pop(); continue; }
+    out.push(p);
+  }
+  return out.join('/');
+}
+
+/** 百分号解码：容忍非法序列（如 "50%off"）而不抛错 */
+function safeDecode(s){
+  const t = String(s || '');
+  try{ return decodeURIComponent(t); }
+  catch(e){
+    // 逐个转义还原，遇非法序列保留原样
+    return t.replace(/%[0-9A-Fa-f]{2}/g, m => {
+      try{ return decodeURIComponent(m); }catch(_){ return m; }
+    });
+  }
+}
+
+/** 文件夹名净化：防路径穿越 */
+function safeFolder(name){
+  let s = String(name || '').trim()
+    .replace(/[\\/]+/g, '-')
+    .replace(/\.\.+/g, '.')
+    .replace(/[<>:"|?*\x00-\x1f]/g, '-')
+    .replace(/^\.+|\.+$/g, '')
+    .replace(/^-+|-+$/g, '')
+    .trim();
+  return s || 'book';
+}
+
+function bytesToBase64(bytes){
+  let bin = '', chunk = 0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  }
+  return btoa(bin);
+}
+function b64ToBytes(b64){
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/* =========================================================================
+   2. SHA-1：本地算 git blob sha，用于"内容未变就跳过上传"
+   ========================================================================= */
+function sha1Hex(bytes){
+  const K = [0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6];
+  const ml = bytes.length * 8;
+  const padded = new Uint8Array((((bytes.length + 8) >> 6) + 1) << 6);
+  padded.set(bytes);
+  padded[bytes.length] = 0x80;
+  const dv = new DataView(padded.buffer);
+  dv.setUint32(padded.length - 4, ml >>> 0, false);
+  dv.setUint32(padded.length - 8, Math.floor(ml / 0x100000000), false);
+
+  let h0=0x67452301,h1=0xefcdab89,h2=0x98badcfe,h3=0x10325476,h4=0xc3d2e1f0;
+  const w = new Int32Array(80);
+  for(let off=0; off<padded.length; off+=64){
+    for(let i=0;i<16;i++) w[i] = dv.getInt32(off + i*4, false);
+    for(let i=16;i<80;i++){ const n = w[i-3]^w[i-8]^w[i-14]^w[i-16]; w[i] = (n<<1)|(n>>>31); }
+    let a=h0,b=h1,c=h2,d=h3,e=h4;
+    for(let i=0;i<80;i++){
+      let f,k;
+      if(i<20){ f=(b&c)|(~b&d); k=K[0]; }
+      else if(i<40){ f=b^c^d; k=K[1]; }
+      else if(i<60){ f=(b&c)|(b&d)|(c&d); k=K[2]; }
+      else { f=b^c^d; k=K[3]; }
+      const t = (((a<<5)|(a>>>27)) + f + e + k + w[i]) >>> 0;
+      e=d; d=c; c=(b<<30)|(b>>>2); b=a; a=t;
+    }
+    h0=(h0+a)>>>0; h1=(h1+b)>>>0; h2=(h2+c)>>>0; h3=(h3+d)>>>0; h4=(h4+e)>>>0;
+  }
+  return [h0,h1,h2,h3,h4].map(x=>x.toString(16).padStart(8,'0')).join('');
+}
+/** git 对象格式：blob <字节数>\0<内容>，再做 SHA-1 */
+function gitBlobSha1(bytes){
+  const content = new Uint8Array(bytes);
+  const header = enc.encode('blob ' + content.length + '\u0000');
+  const buf = new Uint8Array(header.length + content.length);
+  buf.set(header, 0); buf.set(content, header.length);
+  return sha1Hex(buf);
+}
+
+/* =========================================================================
+   3. 全局进度：所有任务共用一条
+   ========================================================================= */
+const progState = { base: 0, span: 100, text: '' };
+function progStart(text, base = 0, span = 100){
+  const p = $('prog1'); if(!p) return;
+  p.classList.remove('off'); p.classList.remove('done'); p.classList.remove('err');
+  progState.base = base; progState.span = span; progState.text = text;
+  progSet(0, text);
+}
+function progSet(pct, text){
+  const p = $('prog1'); if(!p) return;
+  const overall = progState.base + (Math.max(0, Math.min(100, pct)) / 100) * progState.span;
+  const bar = $('progBar'), pc = $('progPct'), txt = $('progTxt');
+  if(bar) bar.style.width = overall.toFixed(1) + '%';
+  if(pc) pc.textContent = Math.round(overall) + '%';
+  if(txt && text != null) txt.innerHTML = String(text);
+  if(txt && text == null && progState.text) txt.innerHTML = progState.text;
+}
+function progText(text){ progState.text = String(text); progSet(null, progState.text); }
+function progIdle(text){ progState.base = 0; progState.span = 100; progEnd(text || '空闲', true); }
+function progEnd(text, ok = true){
+  const p = $('prog1'); if(!p) return;
+  const bar = $('progBar'), pc = $('progPct'), txt = $('progTxt');
+  if(bar) bar.style.width = '100%';
+  if(pc) pc.textContent = ok ? '100%' : (pc.textContent || '0%');
+  if(txt) txt.innerHTML = text || (ok ? '完成' : '已中断');
+  p.classList.add(ok ? 'done' : 'err');
+  clearTimeout(progState._t);
+  progState._t = setTimeout(() => {
+    p.classList.add('off');
+    const t = $('progTxt'); if(t) t.textContent = '空闲';
+    const pc2 = $('progPct'); if(pc2) pc2.textContent = '0%';
+    const b2 = $('progBar'); if(b2) b2.style.width = '0%';
+  }, ok ? 1400 : 4000);
+}
+
+/* =========================================================================
+   4. 日志
+   ========================================================================= */
+let logEmpty = true;
+function log(msg, cls){
+  const el = $('log'); if(!el) return;
+  if(logEmpty){ el.textContent = ''; logEmpty = false; }
+  const line = document.createElement('div');
+  if(cls) line.className = cls;
+  line.textContent = msg;
+  el.appendChild(line);
+  while(el.children.length > 500) el.removeChild(el.firstChild);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* =========================================================================
+   5. HTML → Markdown 转换
+   ========================================================================= */
+const INLINE_TAG = /^(SPAN|EM|I|B|STRONG|SMALL|CITE|Q|DFN|U|SUB|SUP|MARK|ABBR|VAR|KBD|SAMP|CODE|LABEL|BDI|BDO|WBR)$/;
+let cssRules = new Map();
+const _styleCache = new WeakMap();
+
+/** 从文档的 <style> 采集类名 → 样式声明。
+ *  必须自己解析：EPUB 章节由 DOMParser 生成，不属于当前窗口，
+ *  getComputedStyle 对它返回空值（实测 fontStyle 为空）。 */
+function collectCssRules(doc){
+  cssRules = new Map();
+  if(!doc || !doc.querySelectorAll) return;
+  const RE = /(font-style|font-weight|font-size|text-decoration)\s*:\s*([^;}]+)/gi;
+  const RULES = /([^{}]+)\{([^{}]*)\}/g;
+  for(const st of doc.querySelectorAll('style')){
+    const css = st.textContent || '';
+    let r;
+    while((r = RULES.exec(css))){
+      const props = [];
+      let m;
+      RE.lastIndex = 0;
+      while((m = RE.exec(r[2]))) props.push(m[1].toLowerCase() + ':' + m[2].trim());
+      if(!props.length) continue;
+      const decl = props.join(';');
+      for(const part of String(r[1]).split(',')){
+        const name = part.trim().replace(/^\./, '');
+        if(!name || name.includes(' ') || name.includes(':')) continue;
+        cssRules.set(name.toLowerCase(), decl);
+      }
+    }
+  }
+}
+
+/** 取元素样式：内联 > CSS 类规则 > computed */
+function computedOf(el){
+  if(_styleCache.has(el)) return _styleCache.get(el);
+  let st = (el.getAttribute && el.getAttribute('style')) || '';
+  if(!/font-?(style|weight|size)|text-decoration/i.test(st)){
+    const cls = (el.getAttribute('class') || '').split(/\s+/).filter(Boolean);
+    for(const c of cls){
+      const rule = cssRules.get(c.toLowerCase());
+      if(rule){ st = st ? st + ';' + rule : rule; break; }
+    }
+  }
+  if(!st){
+    try{
+      const view = el.ownerDocument && el.ownerDocument.defaultView;
+      if(view && view.getComputedStyle){
+        const cs = view.getComputedStyle(el);
+        st = [cs.fontSize, cs.fontWeight, cs.fontStyle].filter(Boolean).join(';');
+      }
+    }catch(e){}
+  }
+  _styleCache.set(el, st);
+  return st;
+}
+
+/** 页眉页脚等噪声：按完整 class/id 名精确匹配，避免 bookmark 误伤 bookmark-list */
+const NOISE_RE = /^(?:page-?header|page-?footer|pagehead|pagefoot|running-?head|running-?foot|running-?title|chapter-?marker|decorative?|separator|divider)$/i;
+function isNoise(el){
+  if(!el || el.nodeType !== 1) return false;
+  const rawCls = el.getAttribute('class') || '';
+  const rawId = el.getAttribute('id') || '';
+  const tokens = (rawCls + ' ' + rawId).split(/[\s_-]+/).filter(Boolean);
+  if(tokens.some(t => NOISE_RE.test(t))) return true;
+  if(NOISE_RE.test(rawCls.trim()) || NOISE_RE.test(rawId.trim())) return true;
+  const t = el.getAttribute('epub:type') || '';
+  // noteref/biblioref/pagebreak 是导航标记要剔除；footnote/endnote 是注释正文，必须保留
+  if(/^(noteref|biblioref|pagebreak|page-list|landmarks|toc)$/i.test(t)) return true;
+  return false;
+}
+
+/** 字号解析（pt/px 粗略统一到 px 量级） */
+function pxSize(st){
+  const m = /font-?size\s*[:=]\s*([\d.]+)\s*(px|pt|em|rem|%)?/i.exec(st || '');
+  if(!m) return null;
+  const v = parseFloat(m[1]);
+  if(isNaN(v)) return null;
+  const u = (m[2] || 'px').toLowerCase();
+  if(u === 'pt') return v * 1.333;
+  if(u === 'em' || u === 'rem') return v * 16;
+  if(u === '%')  return v / 100 * 16;
+  return v;
+}
+
+/** 该加粗是否为排版噪音而非语义强调 */
+function isLayoutBold(el){
+  const tag = (el.tagName || '').toUpperCase();
+  const semantic = (tag === 'STRONG' || tag === 'B');
+  const styledBold = /font-weight\s*:\s*(bold|bolder|[6-9]00)/i.test(computedOf(el));
+  if(!semantic && !styledBold) return false;
+  const BLOCK = /^(P|DIV|LI|TD|TH|H1|H2|H3|H4|H5|H6|BLOCKQUOTE|SECTION|ARTICLE|DD|DT|TR|TABLE)$/;
+  if(BLOCK.test(tag)) return true;
+  const text = (el.textContent || '').trim();
+  if(text.length > 8) return true;
+  if(/[，。！？；：、,.;!?]/.test(text)) return true;
+  if(!semantic && text.length > 6) return true;
+  return false;
+}
+
+/** 该斜体是否为排版噪音 */
+function isLayoutItalic(el){
+  const tag = (el.tagName || '').toUpperCase();
+  const semantic = (tag === 'EM' || tag === 'I');
+  const styledItalic = /font-style\s*:\s*italic/i.test(computedOf(el));
+  if(!semantic && !styledItalic) return false;
+  const BLOCK = /^(P|DIV|LI|TD|TH|H1|H2|H3|H4|H5|H6|BLOCKQUOTE|SECTION|ARTICLE|DD|DT|TR|TABLE)$/;
+  if(BLOCK.test(tag)) return true;
+  return (el.textContent || '').trim().length > 8;
+}
+
+/** 块级元素是否整体是标题/强调样式（仅单子节点场景） */
+function isStyledEmphasis(el){
+  if(!el || el.nodeType !== 1) return false;
+  const st = computedOf(el);
+  return /font-weight\s*:\s*(bold|bolder|[6-9]00)|font-style\s*:\s*italic/i.test(st);
+}
+
+const isCJK = ch => !!ch && /[一-龥]/.test(ch);
+const isCJKPunct = ch => !!ch && /[　-〿＀-￯]/.test(ch);
+
+/** 两个片段首尾是同一种强调标记时，抹平接缝（`**徐**`+`**浩**` → `**徐浩**`）。
+ *  拼不上、或者抹完会留下空壳/三星号，就返回 null 交给调用方原样拼。 */
+function mergeSeam(a, b){
+  const m1 = /(\*\*|\*|~~)$/.exec(a);
+  const m2 = /^(\*\*|\*|~~)/.exec(b);
+  if(!m1 || !m2 || m1[1] !== m2[1]) return null;
+  const mk = m1[1];
+  const left = a.slice(0, a.length - mk.length);
+  const right = b.slice(mk.length);
+  if(!left.trim() || !right.trim()) return null;
+  // 挨着还有一个星号的是 `***` 粗斜体，抹接缝只会把数量搞乱
+  if(mk[0] === '*' && (/\*$/.test(left) || /^\*/.test(right))) return null;
+  if(mk === '~~' && (/~$/.test(left) || /^~/.test(right))) return null;
+  return left + right;
+}
+
+/** 拼接相邻内联片段 */
+function joinInline(parts, padCjk){
+  const P = parts.filter(p => p != null);
+  let out = '';
+  const stripMark = s => s.replace(/[*_`~]+$/, '');
+  const cjkish = ch => isCJK(ch) || isCJKPunct(ch);
+
+  for(let i = 0; i < P.length; i++){
+    const p = P[i];
+    if(!p) continue;
+    if(/^\s+$/.test(p)){
+      const trimmed = stripMark(out);
+      const prev = trimmed[trimmed.length - 1];
+      let j = i + 1;
+      while(j < P.length && /^\s+$/.test(P[j] || '')) j++;
+      const nextRaw = P[j] || '';
+      const nm = /^[*_`~]+/.exec(nextRaw);
+      const next = nm ? nextRaw[nm[0].length] : nextRaw[0];
+      if(padCjk){ if(prev && !/\s$/.test(out)) out += ' '; continue; }
+      if(cjkish(prev) || cjkish(next)) continue;
+      if(prev && !/\s$/.test(out)) out += ' ';
+      continue;
+    }
+    if(!out){ out = p; continue; }
+    if(/\s$/.test(out) || /^\s/.test(p)){ out += p; continue; }
+    /* 接缝合并：`**徐**` + `**浩**` 拼起来是 `**徐****浩**`。
+       书名、人名逐字加粗（`<b>徐</b><b>浩</b><b>庆</b>`）时就长这样，
+       四个星号挤在一起虽然 cmark 勉强能渲染（套一层多余的 <strong>），
+       但既难看又会把自检吓一跳。两段都是同一种标记就直接把接缝抹平。 */
+    const seam = mergeSeam(out, p);
+    if(seam != null){ out = seam; continue; }
+    const trimmed = stripMark(out);
+    const prev = trimmed[trimmed.length - 1], first = p[0];
+    if(isCJKPunct(prev) || isCJKPunct(first)){ out += p; continue; }
+    const leftContent  = /[\w)\]"'`]/.test(prev) || isCJK(prev);
+    const rightContent = /[\w(\["'`]/.test(first) || isCJK(first);
+    if(leftContent && rightContent){
+      const bothCJK = isCJK(prev) && isCJK(first);
+      out += (bothCJK ? !!padCjk : true) ? ' ' + p : p;
+    }else{
+      out += p;
+    }
+  }
+  return out;
+}
+
+/** 用标记（** / * / ~~）包住内容，保证标记内侧不留空白。
+ *
+ * 为什么必须 trim：CommonMark 的强调标记不能贴着空格 ——
+ *   `** 绝对优**`、`**绝对优 **`、`**　绝对优**`（全角空格）**都算没闭合**，
+ *   GitHub 会把星号原样印在正文里。而 `*绝对优 *` 更糟：星号露出之外，
+ *   后面整段还会被吞成斜体。电子书里 `<b>` 内层带换行缩进是常态
+ *   （`<b>\n  绝对优</b>` → 内层文本以空格开头），所以这条路一定会踩。
+ *
+ * 为什么内层带 * 就不套：斜体里嵌斜体会拼出 `*abc**` 这种数量错乱的标记，
+ * 远比少一层样式糟。宁可丢样式，不能产出配不上的标记。
+ */
+function wrapMark(raw, mark){
+  const t = String(raw).trim();          // trim 顺带吃掉全角空格 U+3000、&nbsp;
+  if(!t) return '';
+  if(t.includes(mark[0])) return t;
+  return mark + t + mark;
+}
+
+function inner(node, ctx, padCjk){
+  const parts = [];
+  for(const c of node.childNodes){
+    if(isNoise(c)) continue;
+    parts.push(convNode(c, ctx));
+  }
+  return joinInline(parts, padCjk);
+}
+
+let svgSeq = 0;
+
+function convNode(node, ctx){
+  if(node.nodeType === 3){
+    /* 全角空格（U+3000）是作者有意的排版分隔，中文标题里极常见（"第一章　绪论"）。
+       它会被后面的 \s+ 压成普通空格，再被"中文之间不留空格"的规则吃掉，
+       标题就粘成一串（"第一章绪论"）。先换成私有区占位符，清理完再还原。 */
+    const KEEP_SP = '\uE000';
+    let t = node.nodeValue
+      .replace(/\u00a0/g, '')
+      .replace(/\u3000/g, KEEP_SP)
+      .replace(/([\u3000-〿\uff00-\uffef])[ \t]*\n[ \t]*/g, '$1')
+      .replace(/([一-龥])[ \t]*\n[ \t]*(?=[一-龥])/g, '$1')
+      .replace(/[ \t]*\n[ \t]*/g, ' ')
+      .replace(/\s+/g, ' ');
+    t = t.replace(/([\u3000-〿\uff00-\uffef]) +/g, '$1');
+    t = t.replace(/([一-龥]) +(?=[一-龥])/g, '$1');
+    return t.split(KEEP_SP).join('\u3000');
+  }
+  if(node.nodeType !== 1) return '';
+  const tag = node.tagName.toUpperCase();
+
+  /* 表格单元格里的 <br> 保留成 <br> 标签。
+     返回换行的话，外层为了对齐单元格必须把空白压平，换行就被吃成空格，
+     "第一行 / 第二行" 会粘成 "第一行第二行"。 */
+  if(tag === 'BR') return (ctx && ctx.inTable) ? '<br>' : '\n';
+  if(tag === 'HR') return '\n\n---\n\n';
+  if(tag === 'IMG'){
+    const raw = node.getAttribute('src') || '';
+    if(!raw) return '';
+    let url = /^data:/i.test(raw) ? raw : (ctx.mapImage ? ctx.mapImage(raw, ctx.currentFile) : raw);
+    /* 兜底转义：mapImage 找不到对应文件时会原样返回 src，里面可能带空格或括号。
+       空格会截断 Markdown 链接目标、括号会提前闭合。% 一律不动 ——
+       已经编码过的路径再编码一次就 404 了。 */
+    if(!/^data:/i.test(url)){
+      url = String(url).trim().replace(/\s+/g, '%20').replace(/\(/g, '%28').replace(/\)/g, '%29');
+    }
+    // alt 里的方括号会破坏 ![alt] 语法，竖线会把表格单元格切断
+    const alt = (node.getAttribute('alt') || '').replace(/[\[\]|]/g, ' ').replace(/\s+/g, ' ').trim();
+    return `![${alt}](${url})`;
+  }
+  if(tag === 'SVG'){
+    let xml = '';
+    try{
+      const view = node.ownerDocument && node.ownerDocument.defaultView;
+      const S = (view && view.XMLSerializer) || (typeof XMLSerializer !== 'undefined' ? XMLSerializer : null);
+      if(S) xml = new S().serializeToString(node);
+    }catch(e){ xml = ''; }
+    if(!xml) return '';
+    const bytes = enc.encode('<?xml version="1.0" encoding="UTF-8"?>\n' + xml);
+    const fname = ctx && ctx.storeAsset ? ctx.storeAsset('inline-' + (svgSeq++) + '.svg', bytes) : null;
+    return fname ? `![${node.getAttribute('aria-label') || '矢量图'}](images/${fname})` : '';
+  }
+  /* 代码块：围栏必须比内容里最长的一段反引号还要长。
+     固定写三个反引号的话，内容里出现 ``` 就会提前把围栏闭合 ——
+     后面整段正文被当成代码，末尾还多出两个空壳围栏。
+     讲 Markdown / 编程的书里这种内容很常见（书里示范代码块怎么写），
+     而一旦发生，GitHub 上看到的是半本书变成灰色代码块。 */
+  if(tag === 'PRE'){
+    const txt = node.textContent.replace(/\n+$/, '');
+    if(!txt.trim()) return '';
+    /* 语言名优先取 <code class="language-xx">，其次看 <pre> 自己。
+       带上这个标注 GitHub 才做语法高亮，书里的示例代码会好看很多。 */
+    const codeEl = node.querySelector('code');
+    const cls = ((codeEl && codeEl.getAttribute('class')) || '') + ' ' + (node.getAttribute('class') || '');
+    const lm = /(?:^|[\s"'])(?:language-|lang-|highlight-)([a-z0-9+#._-]+)/i.exec(cls);
+    const lang = lm ? lm[1].toLowerCase() : '';
+    const runs = txt.match(/`{3,}/g) || [];
+    const maxRun = runs.reduce((a, b) => Math.max(a, b.length), 0);
+    const fence = '`'.repeat(Math.max(3, maxRun + 1));
+    return '\n\n' + fence + lang + '\n' + txt + '\n' + fence + '\n\n';
+  }
+  if(tag === 'CODE' && node.parentElement && node.parentElement.tagName.toUpperCase() !== 'PRE'){
+    const txt = node.textContent;
+    const runs = txt.match(/`+/g) || [];
+    const maxRun = runs.reduce((a, b) => Math.max(a, b.length), 0);
+    const fence = '`'.repeat(maxRun + 1);
+    const pad = txt.startsWith('`') || txt.endsWith('`') ? ' ' : '';
+    return fence + pad + txt + pad + fence;
+  }
+  if(tag === 'SUB') return '<sub>' + inner(node, ctx) + '</sub>';
+  if(tag === 'SUP') return '<sup>' + inner(node, ctx) + '</sup>';
+  if(tag === 'RUBY'){
+    let base = '', reading = '';
+    for(const c of node.childNodes){
+      const isRt = (c.tagName || '').toUpperCase() === 'RT';
+      const t = convNode(c, ctx);
+      if(isRt) reading += t; else base += t;
+    }
+    return reading ? base + '（' + reading + '）' : base;
+  }
+  if(/^H[1-6]$/.test(tag)){
+    /* 这里不能用 \s —— JS 的 \s 包含 U+3000，会把"第一章　绪论"里的全角空格压成半角。 */
+    const t = inner(node, ctx, true).replace(/[ \t\r\n\f\v]+/g, ' ').trim();
+    return t ? `\n\n${'#'.repeat(+tag[1])} ${t}\n\n` : '';
+  }
+  if(tag === 'STRONG' || tag === 'B'){
+    const t = inner(node, ctx);
+    if(!t.trim()) return '';
+    return isLayoutBold(node) ? t : wrapMark(t, '**');
+  }
+  if(tag === 'DEL' || tag === 'S' || tag === 'STRIKE'){
+    const t = inner(node, ctx);
+    return wrapMark(t, '~~');
+  }
+  if(tag === 'EM' || tag === 'I'){
+    const t = inner(node, ctx);
+    if(!t.trim()) return '';
+    return isLayoutItalic(node) ? t : wrapMark(t, '*');
+  }
+  if(tag === 'A'){
+    const href = node.getAttribute('href') || '';
+    const text = inner(node, ctx).trim() || href;
+    if(!href || /^\s*javascript:/i.test(href)) return text;
+    if(/^#/.test(href)) return text;
+    const url = href.trim().replace(/\s+/g, '%20').replace(/\(/g, '%28').replace(/\)/g, '%29');
+    return `[${text.replace(/[\[\]]/g,'')}](${url})`;
+  }
+  if(tag === 'BLOCKQUOTE'){
+    const t = cleanupMd(inner(node, ctx)).trim();
+    if(!t) return '';
+    const quoted = t.split('\n').map(l => l.trim() ? '> ' + l : '>').join('\n').trim();
+    return '\n\n' + quoted + '\n\n';
+  }
+  if(tag === 'UL' || tag === 'OL'){
+    const ordered = tag === 'OL';
+    const items = [...node.children].filter(c => c.tagName.toUpperCase() === 'LI');
+    const lines = [];
+    const markerW = ordered ? String(items.length).length + 2 : 2;
+    const contPad = ' '.repeat(Math.max(3, markerW));
+    items.forEach((li, idx) => {
+      /* 嵌套列表前的空行会让整个 li 被包进 <p>，GFM 渲染成"松散列表"
+         （每项之间一大段空隙）。只压掉紧挨着列表标记的空行，多段落间距保留。 */
+      let t = inner(li, ctx).trim()
+        .replace(/\n{2,}$/, '')
+        .replace(/\n{2,}(?=\s*(?:[-*+]|\d+\.)\s)/g, '\n');
+      const marker = ordered ? `${idx + 1}. ` : '- ';
+      lines.push(t.split('\n').map((l, i) => i === 0 ? marker + l : contPad + l).join('\n'));
+    });
+    return '\n\n' + lines.join('\n') + '\n\n';
+  }
+  if(tag === 'TABLE') return '\n\n' + convTable(node, ctx) + '\n\n';
+  if(tag === 'FIGCAPTION' || (node.getAttribute('class') || '').match(/caption/i)){
+    const t = inlineText(node);
+    return t ? '\n\n' + wrapMark(t, '*') + '\n\n' : '';
+  }
+  if(tag === 'P' || tag === 'SECTION' || tag === 'ARTICLE' || tag === 'DIV' || tag === 'ASIDE' || tag === 'DD' || tag === 'DT'){
+    const t = inner(node, ctx);
+    return t.trim() ? '\n\n' + t.trim() + '\n\n' : '';
+  }
+  // SPAN 之类的行内元素：如果 CSS 类/内联样式表明它有强调或斜体，
+  // 也要转成对应的 Markdown 标记 —— 电子书常用 <span class="em"> 表达斜体。
+  if(INLINE_TAG.test(tag) && !['EM','I','B','STRONG','CODE','SUB','SUP','RUBY'].includes(tag)){
+    const st = computedOf(node);
+    /* 必须用 trim 过的内容包标记：
+       结尾带空格的 `*abc *` 在 CommonMark 里**不算闭合**（强调不能以空格结尾），
+       于是这一行之后的内容全被吞成斜体，星号还可能原样露出来。 */
+    const t = inner(node, ctx).trim();
+    if(!t) return '';
+    // 样式里明确是斜体/粗体（且不是"整段加粗"那种排版噪音）才加标记
+    const italic  = /font-style\s*:\s*italic/i.test(st);
+    const bold    = /font-weight\s*:\s*(bold|bolder|[6-9]00)/i.test(st);
+    if(italic && !bold && !isLayoutItalic(node)) return wrapMark(t, '*');
+    if(bold && !italic && !isLayoutBold(node)) return wrapMark(t, '**');
+    return t;
+  }
+  if(INLINE_TAG.test(tag)) return inner(node, ctx);
+  return inner(node, ctx);
+}
+
+/** 取纯文本（去掉强调标记），用于图题/表题 */
+function inlineText(node){
+  let t = '';
+  for(const c of node.childNodes) t += convNode(c, { currentFile:'', mapImage:null });
+  return t.replace(/\*\*/g,'').replace(/[*_`~]/g,'').replace(/\s+/g,' ').trim();
+}
+
+function convTable(table, ctx){
+  const cap = table.querySelector('caption');
+  let capLine = '';
+  if(cap){
+    const ct = cleanupMd(inner(cap, ctx)).trim().replace(/\n+/g,' ');
+    if(ct) capLine = `\n\n*${ct}*\n\n`;
+  }
+  const rows = [...table.querySelectorAll('tr')];
+  if(!rows.length) return capLine.trim();
+  /* 进单元格时打上标记，让 <br> 保留成标签而不是换行（见 convNode 的 BR 分支）。
+     用完必须还原 —— 表格单元格里再嵌表格时，外层标记不能漏进内层之外的作用域。 */
+  const cellText = tr => {
+    const prev = ctx ? ctx.inTable : false;
+    if(ctx) ctx.inTable = true;
+    try{
+      return [...tr.children]
+        .filter(td => ['TD','TH'].includes(td.tagName.toUpperCase()))
+        .map(td => inner(td, ctx)
+          .replace(/\s*\n+\s*/g, '<br>')   // 源码折行的兜底：也并成 <br>
+          .replace(/\s+/g, ' ')
+          .replace(/\|/g, '\\|')
+          .trim());
+    }finally{ if(ctx) ctx.inTable = prev; }
+  };
+  // 表头只认第一行，避免数据行里的 th 被误升为表头
+  const headRow = rows[0];
+  const head = cellText(headRow);
+  const body = rows.filter(r => r !== headRow).map(cellText);
+  if(!head.length) return capLine.trim();
+  /* 列数按整张表最宽的一行算。源表里"表头 3 列、某行 4 列"很常见，
+     按表头截断会把多出来的单元格直接丢掉（数据无声消失）。 */
+  const cols = Math.max(head.length, ...body.map(r => r.length));
+  const norm = cells => { const c = cells.slice(0, cols); while(c.length < cols) c.push(''); return c; };
+  let s = '| ' + norm(head).join(' | ') + ' |\n';
+  s += '| ' + Array.from({length: cols}, () => '---').join(' | ') + ' |\n';
+  for(const r of body) s += '| ' + norm(r).join(' | ') + ' |\n';
+  return (capLine + '\n' + s).trim();
+}
+
+/** 把「标记内侧带空白」的写法挪到外面 —— 这类写法在 CommonMark 里不闭合。
+ *
+ *  `**绝对优 **势` 和 `** 绝对优**势` 在 GitHub 上都不是粗体，星号原样印出来；
+ *  `*绝对优 *` 还会把后面整段吞成斜体。而我们的正则预览认这两种写法，
+ *  于是出现「本地看是粗体、GitHub 上是星号」的分裂现象。
+ *  生成器已经保证不再产出（见 wrapMark），这一层兜的是**原文自带**的星号
+ *  （书里用 `**xx**` 当强调标记的情况）和历史 md。
+ */
+/** 只处理行内代码（反引号跨度）之外的部分。
+ *  `` `**a  **` `` 里的空格、`**徐****浩**` 这种示范字符串都是**内容**，
+ *  动了它就把书里的示例改坏了。 */
+function mapOutsideCode(line, fn){
+  let out = '', last = 0, m;
+  const re = /(`+)([\s\S]*?)\1/g;
+  while((m = re.exec(line))){
+    out += fn(line.slice(last, m.index)) + m[0];
+    last = m.index + m[0].length;
+  }
+  return out + fn(line.slice(last));
+}
+
+/** 标出每一行是否落在代码围栏里。
+ *
+ *  结束行的判定必须是"整行只有反引号"，且长度 ≥ 开始行 —— 这是 CommonMark 的规矩。
+ *  拿 /^\s*```/ 一把抓（看到三个反引号就翻转状态）的话，
+ *  代码块内容里的 ```python 会被当成结束标记，状态从那一行起全反：
+ *  后面的正文整个掉进代码块，末尾还多出两个空壳围栏。
+ */
+function fenceMask(lines){
+  const mask = new Array(lines.length).fill(false);
+  let inF = false, len = 0;
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i];
+    if(inF){
+      mask[i] = true;
+      const m = /^\s*(`{3,})\s*$/.exec(line);
+      if(m && m[1].length >= len){ inF = false; len = 0; }
+      continue;
+    }
+    const open = /^\s*(`{3,})/.exec(line);
+    if(open){ inF = true; len = open[1].length; mask[i] = true; continue; }
+  }
+  return mask;
+}
+
+function fixEmphasisSpacing(md){
+  const lines = String(md).split('\n');
+  const mask = fenceMask(lines);
+  return lines.map((line, i) => {
+    if(mask[i]) return line;      // 围栏行（含起止）原样放过
+    if(/^\s*([*\-_])\s*(?:\1\s*){2,}$/.test(line)) return line;   // 分隔线 * * *
+    return mapOutsideCode(line, seg => {
+      let out = seg.replace(/(\*\*|~~)([^\n]*?)\1/g, (m, mark, body) => {
+        const t = body.trim();
+        if(!t || t === body) return m;
+        const lead  = (body.match(/^[ \t\u3000]+/) || [''])[0];
+        const trail = (body.match(/[ \t\u3000]+$/) || [''])[0];
+        return lead + mark + t + mark + trail;
+      });
+      /* 相邻粗体接缝：`**徐****浩****庆**`（人名逐字加粗）→ `**徐浩庆**`。
+         cmark 勉强能渲染，但会套出一串多余的 <strong>，自检也会报"可能露星号"。 */
+      for(let k = 0; k < 5; k++){
+        const next = out.replace(/\*\*([^*\n]+?)\*\*\*\*([^*\n]+?)\*\*/g, '**$1$2**');
+        if(next === out) break;
+        out = next;
+      }
+      return out;
+    });
+  }).join('\n');
+}
+
+/** 清理多余空白。代码围栏内完全原样保留 ——
+ *  里面的缩进、空行、# 注释都是代码的一部分，不能做全局正则。 */
+function cleanupMd(s){
+  const lines = String(s).split('\n');
+  /* 代码围栏整块换成**一行占位符**，全局清洗完再原样换回去。
+     以前是把围栏块抽出来**追加到文末** —— 于是第 2 章的一段示例代码
+     会跑到全书最后，正文顺序全乱，而日志里一点错误都没有。
+     占位符是单行文本，空行压缩之类的清洗不会渗进代码块内部。 */
+  const blocks = [];
+  const out = [];
+  let inFence = false, buf = null;
+  for(const line of lines){
+    if(/^\s*```/.test(line)){
+      if(inFence){
+        buf.push(line);
+        blocks.push(buf.join('\n'));
+        out.push('\u0000F' + (blocks.length - 1) + '\u0000');
+        buf = null; inFence = false;
+      }else{ inFence = true; buf = [line]; }
+      continue;
+    }
+    if(inFence){ buf.push(line); continue; }
+    out.push(line.replace(/[ \t　]+$/,'').replace(/^　+/,''));
+  }
+  // 围栏没闭合（源文件本身残缺）：剩下的按原样留在原位
+  if(inFence && buf && buf.length){
+    blocks.push(buf.join('\n'));
+    out.push('\u0000F' + (blocks.length - 1) + '\u0000');
+  }
+
+  let t = out.join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n\s*\n/g, '\n\n')
+    .replace(/^> ([^\n]*)\n\n(?=> )/gm, '> $1\n>\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  t = fixEmphasisSpacing(t);
+  if(!blocks.length) return t;
+  return t.replace(/\u0000F(\d+)\u0000/g, (m, i) => blocks[+i]);
+}
+
+/** 标题层级归一化：按出现顺序取相对深度，避免产出 #### 过深层级 */
+function normalizeHeadings(md){
+  /* 标题层级重排：用「父级栈」推导深度，不用"出现过的级别列表"做映射。
+   *
+   * 为什么不能做映射：映射只能保证"不同级别映射到不同目标"，保证不了连续。
+   * 书里常见两种脏结构：
+   *   ① 章 h2 下面直接 h4（作者跳过了 h3）→ 映射后是 H2 直接 H4，自检报"标题跳级"
+   *   ② 拿 h6 当某种小标题用，且出现在 h2 与 h4 之间 → 排序后 h6 占掉一档，
+   *      h4 又被推到更深的档，跳级照旧
+   * 栈算法天然没有这个问题：每次只比"当前级别比我深的祖先都出栈"，
+   * 深度 = 剩下的祖先数 + 1。相邻两级深度最多只差 1，**结构上不可能跳级**。
+   *
+   * 副作用是 h6 和紧跟着的 h4 可能并成同一档 —— 但它们本来就是兄弟关系
+   * （h4 弹出 h6），并档比凭空造一个断层好。
+   */
+  const lines = md.split('\n');
+  const mask = fenceMask(lines);
+  const stack = [];          // 当前路径上的原始级别，从浅到深
+  return lines.map((line, i) => {
+    if(mask[i]) return line;  // 代码围栏里的内容（含 # 注释）不是标题
+    const m = line.match(/^(#{1,6})\s+(.*)$/);
+    if(!m) return line;
+    const lvl = m[1].length;
+    while(stack.length && stack[stack.length - 1] >= lvl) stack.pop();
+    stack.push(lvl);
+    // +1 是因为 H1 留给书名，正文从 H2 起；最多到 H6
+    const depth = Math.min(6, stack.length + 1);
+    return '#'.repeat(depth) + ' ' + m[2];
+  }).join('\n');
+}
+
+function htmlToMarkdown(html, ctx){
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  collectCssRules(doc);
+  for(const bad of doc.querySelectorAll('script,style,noscript,head')) bad.remove();
+  for(const el of [...doc.querySelectorAll('*')]) if(isNoise(el)) el.remove();
+  const body = doc.body || doc.documentElement;
+  return cleanupMd(inner(body, ctx));
+}
+
+/* =========================================================================
+   6. 自检：转换完自动判断，用户不用肉眼检查
+   ========================================================================= */
+function mdRefs(md){
+  const refs = [];
+  for(const m of String(md).matchAll(/!?\[[^\]]*\]\(\s*([^)\s]+)[^)]*\)/g)) refs.push(safeDecode(m[1]));
+  return refs;
+}
+function imageNameSet(images){
+  const set = new Set();
+  if(!images) return set;
+  if(images instanceof Map){ for(const k of images.keys()) set.add(k); return set; }
+  for(const it of images){ if(Array.isArray(it)) set.add(it[0]); else if(typeof it === 'string') set.add(it); }
+  return set;
+}
+function inlineCodeBalanced(md){
+  const noFence = String(md).replace(/^\s*```[\s\S]*?^\s*```/gm, '');
+  let depth = 0;
+  for(const m of noFence.matchAll(/`+/g)){
+    const n = m[0].length;
+    if(depth === 0) depth = n;
+    else if(depth === n) depth = 0;
+  }
+  return depth === 0;
+}
+
+/** 把「不可能是标记的星号」抹掉，并列出真正的星号行程。
+ *  代码围栏、HTML 标签、行内代码、反斜杠转义、链接目标里的星号都不能算标记。
+ *  抹成等长空格而不是删掉，并且**逐行拼回去要保留换行** ——
+ *  换行丢了，报错的行号会永远指向第 1 行（第一行是书名，看着莫名其妙）。 */
+function starScan(md){
+  const lines = String(md).split('\n');
+  let inFence = false, clean = '';
+  for(const raw of lines){
+    let l = raw;
+    const blank = () => l.replace(/[^\n]/g, ' ');
+    if(/^\s*```/.test(l)){ inFence = !inFence; clean += blank() + '\n'; continue; }
+    if(inFence){ clean += blank() + '\n'; continue; }
+    /* 分隔线（`* * *` / `***` / `> ***` / `- ***`）里的星号不是强调标记。
+       注意只用 [ \t]：U+3000 不算 —— 写成 `****　` 的行在 CommonMark 里
+       不是分隔线，星号会原样显示。 */
+    if(/^[ \t]*(?:>[ \t]*)*(?:(?:[-*+]|\d+[.)])[ \t]+)?([*\-_])(?:[ \t]*\1){2,}[ \t]*$/.test(l)){ clean += blank() + '\n'; continue; }
+    l = l.replace(/<\/?[a-zA-Z][^>]*>/g, m => ' '.repeat(m.length));              // HTML 标签
+    l = l.replace(/(`+)([\s\S]*?)\1/g, m => ' '.repeat(m.length));               // 行内代码
+    l = l.replace(/\\[\\`*_{}[\]()#+\-.!~|>]/g, m => ' '.repeat(m.length));        // 转义
+    l = l.replace(/\]\([^)]*\)/g, m => ' '.repeat(m.length));                     // 链接目标
+    clean += l + '\n';
+  }
+  const runs = [];
+  const re = /\*+/g;
+  let m;
+  while((m = re.exec(clean))) runs.push({ at: m.index, n: m[0].length });
+  return { lines, clean, runs };
+}
+
+const starLine = (clean, at) => clean.slice(0, at).split('\n').length;
+function starSnip(lines, line){
+  const raw = lines[line - 1] || '';
+  return (raw.length > 40 ? raw.slice(0, 40) + '…' : raw).trim();
+}
+
+/** 按 CommonMark 的方向规则给星号配对，返回「开了没闭上」的那些。
+ *
+ *  够用的方向规则：
+ *    能开 = 右边不是空白    —— 强调不能以空格开头
+ *    能闭 = 左边不是空白    —— 强调不能以空格结尾
+ *
+ *  漏掉的关键就在这里：老扫描器只问「有没有成对的 **」，没问「这对 ** 内侧
+ *  是不是贴着空格」。`** 绝对优**` 和 `**绝对优 **` 在 GitHub 上都不算闭合，
+ *  星号会原样印进正文 —— 用户看到的 `**绝对优**势` 就是这么来的。
+ *  这种写法左右两个标记都在，任何"数个数"的检查都查不出来。
+ *
+ *  两条克制规则，避免把书里**本来就有的**星号当成 bug：
+ *   ① 左右两边都是空白的星号（如「直接写 ** 而不加空格」）是字面 token，不参与配对；
+ *   ② 只报「开了没闭上」。能闭但没得闭的（如 `2**  y`）也放行 ——
+ *      那是原文里的字面星号，报出来只会制造噪音。
+ */
+function pairStars(clean, runs, opt){
+  const isWS = c => c === undefined || /\s/.test(c);
+  const isAlnum = c => !!c && /[0-9A-Za-z]/.test(c);
+  /* 给每个行程标上行号（行程本身就是升序的，一次扫完即可）。*/
+  const lineOf = [];
+  let ln = 1, pos = 0;
+  for(const r of runs){ for(let i = pos; i < r.at; i++) if(clean[i] === '\n') ln++; lineOf.push(ln); pos = r.at; }
+  const perLine = {};
+  runs.forEach((r, i) => { if(r.n >= opt.min && (!opt.max || r.n <= opt.max)) perLine[lineOf[i]] = (perLine[lineOf[i]] || 0) + 1; });
+
+  const open = [];
+  let closeNoOpen = null;
+  const unit = opt.unit || 2;   // 粗体一次吃 2 个星号，斜体吃 1 个
+  runs.forEach((r, i) => {
+    if(r.n < opt.min || (opt.max && r.n > opt.max)) return;
+    const prev = clean[r.at - 1], next = clean[r.at + r.n];
+    if(opt.guardAlnum && r.n === 1 && isAlnum(prev) && isAlnum(next)) return;    // 5*3、a*b
+    /* 单打独斗的一个星号行程，两边还都是空白 —— 那是正文里的字面 token
+       （"直接写 ** 而不加空格"），不是标记。整行只有它一个的也放行：
+       `x  **2`、`2**  y` 这种是公式，报出来纯属噪音。 */
+    if(isWS(prev) && isWS(next)) return;
+    if(opt.lineAware && perLine[lineOf[i]] < 2) return;
+    /* 一个行程里的星号可以拆开用：`**徐****浩**` 中间那 4 个星号，
+       前两个当闭、后两个当开，是合法的嵌套粗体（cmark 能渲染）。
+       所以按 unit 记账，而不是"一个行程一次配对"。 */
+    let rem = r.n;
+    if(!isWS(prev) && open.length && rem >= unit){ open.pop(); rem -= unit; }      // 先当闭标记用
+    if(rem >= unit && !isWS(next)){ open.push(r); rem -= unit; }                  // 剩下的当开标记
+    else if(rem >= unit && rem === r.n && !isWS(prev) && !closeNoOpen) closeNoOpen = r;   // 想闭却没得闭
+  });
+  return { open, closeNoOpen };
+}
+
+/** 粗体 `**` 会不会在 GitHub 上原样露出来 */
+function scanBold(md){
+  const { lines, clean, runs } = starScan(md);
+  const r = pairStars(clean, runs, { min: 2, lineAware: true, unit: 2 });
+  const bad = r.open[0] || r.closeNoOpen;
+  if(!bad) return { unmatched: false };
+  const line = starLine(clean, bad.at);
+  return { unmatched: true, line, snippet: starSnip(lines, line) };
+}
+
+/** 斜体 `*`（单星号）会不会在 GitHub 上原样露出来。
+ *
+ *  scanBold 只管 `**`，单星号一直是盲区 —— 而单个 `*` 失配的后果更显眼：
+ *  GitHub 会把后面一大段都变成斜体，星号还照原样露着。
+ *  用户看到过的 `**降低…模**式`、`*用数据说话` 都属于这一类。
+ */
+function scanItalic(md){
+  const { lines, clean, runs } = starScan(md);
+  const r = pairStars(clean, runs, { min: 1, max: 1, guardAlnum: true, unit: 1 });
+  const bad = r.open[0];
+  if(!bad) return { unmatched: false };
+  const line = starLine(clean, bad.at);
+  return { unmatched: true, line, snippet: starSnip(lines, line) };
+}
+
+function validateMarkdown(md, imageNames){
+  const issues = [];
+  const push = (level, msg) => issues.push({ level, msg });
+  if(!md || !md.trim()){ push('err','输出为空'); return { ok:false, issues, errorCount:1, warnCount:0 }; }
+
+  const boldScan = scanBold(md);
+  if(boldScan.unmatched) push('err',
+    `第 ${boldScan.line} 行的 ** 在 GitHub 上不会生效，星号会原样印进正文` +
+    `（CommonMark 规定标记内侧不能贴空格、且必须成对）。去那一行把星号内侧的空格删掉：${boldScan.snippet}`);
+
+  const italScan = scanItalic(md);
+  if(italScan.unmatched) push('err',
+    `正文有未闭合的斜体标记 *（第 ${italScan.line} 行）：GitHub 上会把后面一大段都变成斜体，星号还可能原样露出来。` +
+    `去那一行把落单的 * 删掉或补全：${italScan.snippet}`);
+
+  const fences = (md.match(/^\s*```/gm) || []).length;
+  if(fences % 2 !== 0) push('err', `代码围栏数量为奇数（${fences}），存在未闭合的代码块`);
+  if(!inlineCodeBalanced(md)) push('warn','有未闭合的行内代码，建议检查含反引号的正文');
+
+  for(const tag of ['sub','sup']){
+    const o = (md.match(new RegExp('<'+tag+'>','g'))||[]).length;
+    const c = (md.match(new RegExp('</'+tag+'>','g'))||[]).length;
+    if(o !== c) push('warn', `<${tag}> 标签不成对（${o} 开 / ${c} 闭）`);
+  }
+
+  const lines = md.split('\n');
+  /* 表格按「连续以 | 开头的行」分块。整篇一起比会误报 ——
+     一本书里 2 列的表和 4 列的表同时存在是正常的，只有同一张表内部列数不齐才错位。 */
+  const tableBlocks = [];
+  let curTable = [];
+  for(const l of lines){
+    if(/^\s*\|/.test(l)) curTable.push(l);
+    else if(curTable.length){ tableBlocks.push(curTable); curTable = []; }
+  }
+  if(curTable.length) tableBlocks.push(curTable);
+  if(tableBlocks.length){
+    const isSep = l => /^\s*\|[\s:|-]+\|\s*$/.test(l);
+    tableBlocks.forEach((rows, bi) => {
+      const tag = tableBlocks.length > 1 ? `第 ${bi + 1} 个表格` : '表格';
+      if(!rows.some(isSep)) push('warn', `${tag}缺少表头分隔行，不会被渲染成表格`);
+      const cols = rows.filter(l => !isSep(l)).map(l => l.replace(/\\\|/g,'\u0001').split('|').length);
+      const uniq = [...new Set(cols)];
+      if(uniq.length > 1) push('warn', `${tag}各行列数不一致（${uniq.join(' / ')}），会渲染错位`);
+    });
+  }
+
+  /* 代码围栏里的 `# 注释` 不是标题。
+     以前只判断"这一行是不是围栏行"就跳过，却没有维护围栏状态，
+     于是围栏内部照旧被当正文扫 —— 讲编程的书里满屏 # 注释，
+     自检面板就会报一堆莫须有的"标题跳级"。 */
+  const mask = fenceMask(lines);
+  const hs = [];
+  lines.forEach((l, i) => {
+    if(mask[i]) return;
+    const m = l.match(/^(#{1,7})\s+(.+)$/);
+    if(m) hs.push({ level: m[1].length, text: m[2], line: i+1 });
+  });
+  for(let i = 1; i < hs.length; i++){
+    if(hs[i].level - hs[i-1].level > 1){
+      push('warn', `标题跳级：第 ${hs[i-1].line} 行 H${hs[i-1].level} 之后，第 ${hs[i].line} 行直接是 H${hs[i].level}（${hs[i].text.slice(0,14)}）`);
+      break;
+    }
+  }
+  hs.filter(h => h.level > 6).forEach(h => push('err', `第 ${h.line} 行用了 H${h.level}，超过 Markdown 上限 H6`));
+
+  const outside = md.replace(/^\s*```[\s\S]*?^\s*```/gm, '');
+  const suspicious = outside.split('\n').filter(l => {
+    const t = l.replace(/^#+\s*/, '');
+    return /^#\s/.test(l) && /^\s*(def |class |import |from |return |print\(|[{};]|\/\/|\/\*|\*\/|#)/.test(t);
+  });
+  if(suspicious.length) push('err', `代码块内的注释泄漏成了标题：${suspicious[0].slice(0,30)}`);
+
+  if(imageNames && imageNames.size){
+    const known = new Set([...imageNames].map(n => 'images/' + n));
+    const missing = [...new Set(mdRefs(md))].filter(u => u.startsWith('images/')).filter(u => !known.has(u));
+    if(missing.length) push('err', `有 ${missing.length} 张图片找不到对应文件（仓库里会裂图）：${missing.slice(0,3).join('、')}`);
+  }
+
+  const errs = issues.filter(i => i.level === 'err');
+  return { ok: errs.length === 0, issues, errorCount: errs.length, warnCount: issues.length - errs.length };
+}
+
+/* =========================================================================
+   7. EPUB 解析（zip + OPF）
+   ========================================================================= */
+function findEOCD(buf){
+  const dv = new DataView(buf);
+  for(let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--){
+    if(dv.getUint32(i, true) === 0x06054b50) return i;
+  }
+  return -1;
+}
+function zipEntries(buf){
+  const dv = new DataView(buf);
+  const eocd = findEOCD(buf);
+  if(eocd < 0) throw new Error('不是有效的 EPUB/ZIP（找不到中央目录）');
+  const count = dv.getUint16(eocd + 10, true);
+  let off = dv.getUint32(eocd + 16, true);
+  const out = new Map();
+  for(let i = 0; i < count; i++){
+    if(off + 46 > buf.byteLength || dv.getUint32(off, true) !== 0x02014b50) break;
+    const method = dv.getUint16(off + 10, true);
+    const compSize = dv.getUint32(off + 20, true);
+    const nameLen = dv.getUint16(off + 28, true);
+    const extraLen = dv.getUint16(off + 30, true);
+    const commentLen = dv.getUint16(off + 32, true);
+    const localOff = dv.getUint32(off + 42, true);
+    const name = new TextDecoder('utf-8').decode(new Uint8Array(buf, off + 46, nameLen));
+    out.set(name, { method, compSize, localOff });
+    off += 46 + nameLen + extraLen + commentLen;
+  }
+  return out;
+}
+
+/**
+ * ZIP 条目解压。
+ *
+ * 只用浏览器原生的 DecompressionStream —— 它在 Chrome 80 / Safari 16.4 /
+ * Firefox 113（2023 年）之后都可用，覆盖了绝大多数用户。
+ *
+ * 曾经想手写一份纯 JS inflate 做老浏览器兜底，但实测它无法保证正确性
+ * （Huffman 规范序、动态表构造极易出错，而错误的解压会静默产出损坏的图片）。
+ * 与其冒数据损坏的风险，不如明确告知用户升级浏览器 —— 这里宁可失败也不给错数据。
+ */
+async function zipRead(buf, entry){
+  if(!entry) return null;
+  const dv = new DataView(buf);
+  if(dv.getUint32(entry.localOff, true) !== 0x04034b50) throw new Error('ZIP 局部头损坏: ' + entry.name);
+  const nameLen = dv.getUint16(entry.localOff + 26, true);
+  const extraLen = dv.getUint16(entry.localOff + 28, true);
+  const start = entry.localOff + 30 + nameLen + extraLen;
+  const bytes = new Uint8Array(buf, start, entry.compSize);
+  if(entry.method === 0) return bytes;                     // 存储方式，无需解压
+  /* 99 = AES 加密（带 DRM 的 EPUB 走这个）。硬解压出来的字节是乱码，
+     后面会变成一堆坏掉的图 —— 与其让人对着"暂不支持的压缩方式 99"发呆，
+     不如直说：这是加密的书，换一本没加密的。 */
+  if(entry.method === 99)
+    throw new Error('这本 EPUB 有 DRM 加密（ZIP method 99），无法解析，请改用未加密的版本');
+  if(entry.method !== 8) throw new Error('暂不支持的压缩方式: ' + entry.method);
+  if(typeof DecompressionStream !== 'function'){
+    throw new Error('当前浏览器版本过低，无法解压 EPUB。请用 Chrome 80+ / Edge 80+ / Safari 16.4+ / Firefox 113+ 打开本页');
+  }
+  const ds = new DecompressionStream('deflate-raw');
+  const stream = new Blob([bytes]).stream().pipeThrough(ds);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function readText(buf, entry){
+  const b = await zipRead(buf, entry);
+  if(!b) return null;
+  // BOM 与编码探测
+  if(b[0] === 0xEF && b[1] === 0xBB && b[2] === 0xBF) return new TextDecoder('utf-8').decode(b.subarray(3));
+  if(b[0] === 0xFE && b[1] === 0xFF) return new TextDecoder('utf-16le').decode(b.subarray(2));
+  if(b[0] === 0xFF && b[1] === 0xFE) return new TextDecoder('utf-16be').decode(b.subarray(2));
+  const head = new TextDecoder('utf-8', { fatal:false }).decode(b.subarray(0, 1024));
+  const m = /encoding\s*=\s*["']([\w-]+)["']/i.exec(head);
+  if(m){
+    const encName = m[1].toLowerCase();
+    if(encName === 'gbk' || encName === 'gb2312' || encName === 'gb18030'){
+      try{ return new TextDecoder('gbk').decode(b); }catch(e){}
+    }
+    try{ return new TextDecoder(encName).decode(b); }catch(e){}
+  }
+  return new TextDecoder('utf-8').decode(b);
+}
+const parseXml = text => new DOMParser().parseFromString(text, 'application/xml');
+/**
+ * 按 localName 取元素的文本。
+ *
+ * 必须这么写：OPF 用的是 Dublin Core 命名空间（<dc:title>），而 getElementsByTagName('title')
+ * 在 XML 文档里按 **qualifiedName** 匹配，<dc:title> 的 qualifiedName 是 "dc:title"，
+ * 于是一个都取不到 —— 之前每本书转换出来的开头都是一个空的 "# "。
+ */
+function xmlText(doc, tag){
+  const want = String(tag).toLowerCase();
+  const els = doc.getElementsByTagName('*');
+  for(const el of els){
+    const ln = (el.localName || el.nodeName || '').toLowerCase();
+    if(ln === want) return (el.textContent || '').trim();
+  }
+  return '';
+}
+
+async function epubToMarkdown(arrayBuffer){
+  progStart('解析 EPUB…', 0, 100);
+  const buf = arrayBuffer;
+  const entries = zipEntries(buf);
+
+  // container.xml → OPF 路径。entries 是 key(路径) → entry 对象 的 Map，
+  // 注意区分"键名"和"entry 对象"，别把对象当键传回 get()（会取到 undefined）。
+  const containerKey = entries.has('META-INF/container.xml')
+    ? 'META-INF/container.xml'
+    : [...entries.keys()].find(k => k.toLowerCase() === 'meta-inf/container.xml');
+  if(!containerKey) throw new Error('缺少 META-INF/container.xml');
+  const containerText = await readText(buf, entries.get(containerKey));
+  const cdoc = parseXml(containerText);
+  const rootfiles = cdoc.getElementsByTagName('rootfile');
+  if(!rootfiles.length) throw new Error('container.xml 里没有 rootfile');
+  let opfPath = (rootfiles[0].getAttribute('full-path') || '').replace(/^\/+/, '');
+  if(!opfPath) throw new Error('rootfile 缺少 full-path');
+  const opfKey = entries.has(opfPath) ? opfPath
+    : [...entries.keys()].find(k => k.toLowerCase() === opfPath.toLowerCase());
+  if(!opfKey) throw new Error('找不到 OPF：' + opfPath);
+
+  const opfText = await readText(buf, entries.get(opfKey));
+  const opf = parseXml(opfText);
+  const baseDir = dirName(opfPath);
+
+  // manifest：id → {href, mediaType, properties}
+  const manifest = new Map();
+  for(const it of opf.getElementsByTagName('item')){
+    const id = it.getAttribute('id');
+    let href = it.getAttribute('href') || '';
+    /* OPF 的 href 允许带 #fragment（指向 SVG 内部元素），常规做法是截掉。
+       但文件名本身带 # 的也不少见（"a#b.png"），直接截会让它在 manifest 里消失，
+       于是正文引用找不到对应条目。先看 zip 里有没有完整路径，没有才截。 */
+    try{
+      href = safeDecode(href);
+      if(!href || !entries.has(normPath(baseDir, href))){
+        href = href.split('#')[0].split('?')[0];
+      }
+    }catch(e){ href = String(href).split('#')[0]; }
+    manifest.set(id, {
+      abs: normPath(baseDir, href),
+      mediaType: (it.getAttribute('media-type') || '').toLowerCase(),
+      properties: (it.getAttribute('properties') || '')
+    });
+  }
+  // spine：阅读顺序
+  const chapterPaths = [];
+  for(const ref of opf.getElementsByTagName('itemref')){
+    const it = manifest.get(ref.getAttribute('idref'));
+    if(it && /html/.test(it.mediaType || 'html')) chapterPaths.push(it.abs);
+  }
+  if(!chapterPaths.length){
+    // spine 缺失或为空：退回按 manifest 顺序取所有 html
+    for(const [, v] of manifest) if(/html/.test(v.mediaType)) chapterPaths.push(v.abs);
+  }
+  if(!chapterPaths.length) throw new Error('EPUB 里找不到任何章节文件');
+
+  // 图片条目
+  const imageEntryByName = new Map();
+  let coverItem = null;
+  for(const [, v] of manifest){
+    if(/^image\//.test(v.mediaType)){
+      imageEntryByName.set(v.abs, v);
+      if(v.abs.toLowerCase() === coverItem?.abs?.toLowerCase()) continue;
+      if(/cover/.test(v.properties)) coverItem = v;
+    }
+  }
+  // meta 里也可能有 cover
+  if(!coverItem){
+    for(const m of opf.getElementsByTagName('meta')){
+      if((m.getAttribute('name') || '').toLowerCase() === 'cover'){
+        const it = manifest.get(m.getAttribute('content'));
+        if(it) coverItem = it;
+      }
+    }
+  }
+  /* 兜底：有些书既没有 properties="cover-image"，也没有 <meta name="cover">，
+     但图片就叫 cover.jpg / 封面.png。按约定猜一个，总比整本书没有封面强。 */
+  if(!coverItem){
+    const guess = [...imageEntryByName.values()].find(v =>
+      /(^|\/)(cover|封面|front)[^/]*\.(jpe?g|png|gif|webp|svg)$/i.test(v.abs));
+    if(guess) coverItem = guess;
+  }
+
+  const images = new Map();
+  const usedNames = new Set();
+  const usedEntry = new Map();
+  // 封面：manifest 里的项只有路径，没有压缩信息，必须回 zip entries 里找真正的 entry
+  let coverBytes = null, coverError = '';
+  if(coverItem){
+    const ck = entries.has(coverItem.abs) ? coverItem.abs
+      : [...entries.keys()].find(k => k.toLowerCase() === coverItem.abs.toLowerCase());
+    if(!ck){
+      coverError = '封面文件不在压缩包里：' + coverItem.abs;
+    }else{
+      try{
+        coverBytes = await zipRead(buf, entries.get(ck));
+        if(!coverBytes || !coverBytes.length) coverError = '封面解压出来是空的：' + coverItem.abs;
+      }catch(e){
+        coverBytes = null;
+        coverError = '封面解压失败：' + coverItem.abs + '（' + (e.message || e) + '）';
+      }
+    }
+  }else{
+    coverError = '这本 EPUB 没有声明封面';
+  }
+  // 有封面但读不出来时必须说出来 —— 静默跳过的话，README 里就是一块空白，用户无从判断
+  if(coverError) log('  [封面] ' + coverError, /没有声明/.test(coverError) ? 'info' : 'warn');
+  else log(`  [封面] ${coverItem.abs}（${fmtSize(coverBytes.length)}）`, 'ok');
+
+  /* 图片文件名净化。
+   * EPUB 里的图片名经常带空格、括号、井号、问号、百分号（"my photo 1.jpg"、"figure(2).png"）。
+   * 这些字符在 Markdown 链接里是语法的一部分：空格截断目标、括号提前闭合、
+   * # 变锚点、% 被二次转义 —— 到 GitHub 上就是一片裂图。
+   * 统一换成下划线，中文保留（中文经 URL 编码后完全正常）。 */
+  function safeAssetName(name){
+    const m = String(name).match(/\.([a-z0-9]+)$/i);
+    const ext = m ? '.' + m[1].toLowerCase() : '';
+    let base = ext ? String(name).slice(0, -m[0].length) : String(name);
+    base = base
+      .replace(/[\s\u3000]+/g, '_')
+      .replace(/[#?%&+(),;=@!$'"`<>|*\\/:\[\]]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^[_.]+|[_.]+$/g, '')
+      .slice(0, 64);
+    return (base || 'img') + ext;
+  }
+
+  function uniqueName(preferred, ext){
+    const clean = safeAssetName(preferred);
+    const m = clean.match(/^(.*?)(\.[^.]+)$/);
+    const stem = m ? m[1] : clean, sfx = m ? m[2] : '';
+    let n = clean, i = 1;
+    while(usedNames.has(n)){ n = stem + '_' + (++i) + sfx; }
+    usedNames.add(n);
+    return n;
+  }
+
+  /* 按路径找图片 entry。大小写归一 —— EPUB 里 ../Images/UP.JPG 和 ../images/up.jpg
+     常常指向同一个文件，不归一就会给同一张图生成两个名字，其中一个还填不上内容。 */
+  function lookupImage(abs){
+    if(!abs) return null;
+    if(imageEntryByName.has(abs)) return imageEntryByName.get(abs);
+    const low = abs.toLowerCase();
+    for(const [k, v] of imageEntryByName){ if(k.toLowerCase() === low) return v; }
+    return null;
+  }
+
+  const ctx = {
+    currentFile: '',
+    storeAsset(name, bytes){
+      const ext = (name.match(/\.[a-z0-9]+$/i) || ['.bin'])[0].toLowerCase();
+      const out = uniqueName(baseName(name), ext);
+      images.set(out, bytes);
+      return out;
+    },
+    mapImage(src, file){
+      if(/^(https?:|data:)/i.test(src)) return src;
+      const raw = String(src).trim();
+      if(!raw) return src;
+      /* 文件名里可能真的带 ? 或 #（zip 路径允许），而这两个字符在 URL 里分别是 query 和
+         fragment。先按原样找，找不到再逐级退让 —— 反过来做的话 "a#b.png" 会先被截成 "a"，
+         永远匹配不上，图就丢了。 */
+      const cands = [];
+      const push = v => { if(v && cands.indexOf(v) < 0) cands.push(v); };
+      push(raw);
+      push(raw.split('#')[0]);
+      push(raw.split('?')[0]);
+      push(raw.split('#')[0].split('?')[0]);
+
+      let abs = null, entry = null;
+      for(const c of cands){
+        let dec = c;
+        try{ dec = safeDecode(c); }catch(e){ dec = c; }
+        const a = normPath(dirName(file || ''), dec);
+        const hit = lookupImage(a);
+        if(hit){ abs = a; entry = hit; break; }
+      }
+      if(!entry) return raw;              // 实在找不到就原样保留，交给输出层转义
+
+      const key = abs.toLowerCase();
+      if(usedEntry.has(key)) return 'images/' + usedEntry.get(key);
+      const ext = (baseName(entry.abs).match(/\.[^.]+$/) || ['.png'])[0].toLowerCase();
+      const out = uniqueName(baseName(entry.abs), ext);
+      usedEntry.set(key, out);
+      images.set(out, null);
+      return 'images/' + out;
+    }
+  };
+
+  // 逐章转换
+  const chunks = [];
+  const rawChapters = [];
+  let done = 0;
+  for(const path of chapterPaths){
+    ctx.currentFile = path;
+    const key = entries.has(path) ? path
+      : [...entries.keys()].find(k => k.toLowerCase() === path.toLowerCase());
+    const text = key ? await readText(buf, entries.get(key)) : null;
+    rawChapters.push(text || '');
+    done++;
+    if(done % 5 === 0 || done === chapterPaths.length){
+      progSet(done / chapterPaths.length * 70, `读取章节 <b>${done}</b> / ${chapterPaths.length}`);
+      /* 让出主线程：解析整章是纯同步的 DOM 活，几章连着跑浏览器就没机会重绘 ——
+         进度条定住不动、页面像卡死。paint() 会让浏览器画一帧（内部有节流，不会拖慢转换）。 */
+      await paint(done === chapterPaths.length);
+    }
+    if(text == null) continue;
+    let md;
+    try{ md = htmlToMarkdown(text, ctx); }
+    catch(e){ log(`  [跳过] ${path}：${e.message}`, 'warn'); continue; }
+    if(md.trim()) chunks.push(md.trim());
+  }
+
+  // 填充图片内容
+  let imgDone = 0;
+  for(const [absKey, outName] of [...usedEntry.entries()]){
+    const entry = lookupImage(absKey);
+    if(!entry || images.get(outName)) continue;
+    try{
+      const k = entries.has(entry.abs) ? entry.abs
+        : [...entries.keys()].find(x => x.toLowerCase() === entry.abs.toLowerCase());
+      if(k) images.set(outName, await zipRead(buf, entries.get(k)));
+    }
+    catch(e){ images.delete(outName); }
+    imgDone++;
+    if(imgDone % 5 === 0 || imgDone === usedEntry.size){
+      progSet(70 + imgDone / Math.max(1, usedEntry.size) * 25, `读取插图 <b>${imgDone}</b> / ${usedEntry.size}`);
+      await paint(imgDone === usedEntry.size);   // 同上：给浏览器一个重绘的机会
+    }
+  }
+
+  /* 插图按内容去重。
+   *
+   *  同一个装饰图（章末分隔线、出版社 logo、公式编号用的小图标）在一本书里
+   *  被引用几十次是常态 —— 真实书《现代》里 4827 张图有 71 张内容完全相同，
+   *  其中 `image_000.png` 一个文件就出现了 26 次。不去重就是往仓库传 26 个
+   *  一模一样的文件：多 25 次 API 请求、多占仓库、README 里也看不出区别。
+   *
+   *  做法：按 sha1 归并（复用 gitBlobSha1，和上传时算 blob sha 用的是同一套），
+   *  重复的名字从 images 里删掉，正文里的引用统一改成指向保留的那一份。 */
+  const byHash = new Map(), alias = new Map();
+  for(const [name, bytes] of [...images]){
+    if(!bytes || !bytes.length) continue;
+    let h = '';
+    try{ h = gitBlobSha1(bytes); }catch(e){ continue; }
+    if(byHash.has(h)) alias.set(name, byHash.get(h));
+    else byHash.set(h, name);
+  }
+  if(alias.size){
+    for(const [dup, keep] of alias){
+      images.delete(dup);
+      const from = 'images/' + dup, to = 'images/' + keep;
+      for(let ci = 0; ci < chunks.length; ci++) chunks[ci] = chunks[ci].split(from).join(to);
+    }
+    log(`  [配图] ${alias.size} 张与已有图内容完全相同，已合并（章节装饰图常见）`, 'info');
+  }
+
+  // 拼装：书名 H1 + 元信息 + 各章
+  const meta = {
+    title: xmlText(opf, 'title'),
+    creator: xmlText(opf, 'creator'),
+    publisher: xmlText(opf, 'publisher'),
+    language: xmlText(opf, 'language')
+  };
+  const parts = [];
+  if(meta.title) parts.push('# ' + meta.title);   // 没有书名就不留一个空的 "#"
+  const infoBits = [];
+  if(meta.creator) infoBits.push('作者：' + meta.creator);
+  if(meta.publisher) infoBits.push('出版社：' + meta.publisher);
+  if(meta.language) infoBits.push('语言：' + meta.language);
+  if(infoBits.length) parts.push('> ' + infoBits.join('　·　'));
+
+  /* 标题层级只对**正文**归一化，再拼书名。
+     混在一起做的话，书名那个 H1 会参与层级序列，把整本书的标题整体压低一级
+     （书名 H1→H2、章节 h2→H3、小节 h3→H4）。 */
+  const bodyMd = normalizeHeadings(cleanupMd(chunks.join('\n\n---\n\n')));
+  if(bodyMd) parts.push(bodyMd);
+
+  let markdown = cleanupMd(parts.join('\n\n'));
+  progSet(100, '转换完成');
+
+  const cover = coverItem ? { name: baseName(coverItem.abs), bytes: coverBytes } : null;
+  return {
+    markdown,
+    images: Array.from(images.entries()).filter(([, v]) => v),
+    cover,
+    meta,
+    __chapters: rawChapters
+  };
+}
+
+/* =========================================================================
+   8. GitHub API
+   ========================================================================= */
+function apiHeaders(token){
+  return {
+    'Authorization': 'Bearer ' + token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+/** 把 GitHub 英文报错翻译成人话 */
+function explainError(e){
+  const st = e && e.status, raw = (e && e.message) || '';
+  if(/is at .* but expected|reference does not exist|failed to update ref/i.test(raw))
+    return '分支写入冲突（多本书同时上传导致），请等待后重新上传此文件';
+  if(st === 401) return 'Token 无效或已过期（请重新生成，勾选 repo 权限）';
+  if(st === 403){
+    if(/rate limit|secondary/i.test(raw)) return '触发 GitHub 限流，请等待几分钟后重试';
+    if(/permission/i.test(raw))        return 'Token 权限不足（需要 repo 权限）';
+    return '无权访问该仓库（Token 所属账号不是该仓库所有者）';
+  }
+  if(st === 404) return '找不到仓库或路径（检查仓库名是否正确）'
+    + (e && e.url ? '  ← ' + e.url : '');
+  if(st === 409) return '仓库文件冲突（请点一次「读取仓库」刷新后再试）';
+  if(st === 413 || /too large|large file/i.test(raw)) return '文件超过 GitHub 单文件 100MB 限制';
+  if(st === 422){
+    if(/sha wasn't supplied|invalid sha/i.test(raw)) return '文件已存在但缺少更新凭证';
+    if(/name.*invalid|path/i.test(raw)) return '路径含 GitHub 不允许的字符';
+    return 'GitHub 拒绝了该请求：' + raw;
+  }
+  if(st === 429) return '请求过于频繁，请稍候重试';
+  if(st >= 500) return 'GitHub 服务异常（' + st + '），稍后重试即可';
+  if(!st && /Failed to fetch|NetworkError/i.test(raw)) return '网络连接失败，请检查网络后重试';
+  return raw;
+}
+async function gh(token, url, opts = {}){
+  let res;
+  try{
+    res = await fetch(url, { ...opts, headers: { ...apiHeaders(token), ...(opts.headers || {}) } });
+  }catch(e){
+    const err = new Error('网络请求失败：无法连接 GitHub（检查网络/代理）');
+    err.cause = e; throw err;
+  }
+  const text = await res.text();
+  let data = null;
+  try{ data = text ? JSON.parse(text) : null; }catch(e){ data = { message: text }; }
+  if(!res.ok){
+    const err = new Error((data && data.message) || ('HTTP ' + res.status));
+    err.status = res.status; err.data = data;
+    err.url = String(url).replace('https://api.github.com', '');
+    err.friendly = explainError(err);
+    throw err;
+  }
+  return data;
+}
+/** 是否值得重试：网络抖动、5xx、限流、ref 竞态 */
+function isTransient(err){
+  if(!err) return false;
+  const m = err.message || '';
+  if(/is at .* but expected|reference does not exist|failed to update ref|does not match/i.test(m)) return true;
+  if(err.status === 422 && /sha/i.test(m)) return true;
+  if(err.status === 429 || err.status >= 500) return true;
+  if(!err.status) return /network|fetch|timeout/i.test(m);
+  if(err.status === 403 && /rate limit|secondary/i.test(m)) return true;
+  return false;
+}
+async function withRetry(fn, { tries = 3, label = '' } = {}){
+  let lastErr;
+  for(let i = 1; i <= tries; i++){
+    try{ return await fn(i); }
+    catch(e){
+      lastErr = e;
+      if(!isTransient(e) || i === tries) break;
+      const wait = 600 * Math.pow(2, i - 1);
+      log(`  ${label} 第 ${i} 次失败（${e.friendly || e.message}），${Math.round(wait/1000)} 秒后重试…`, 'warn');
+      await sleep(wait);
+    }
+  }
+  throw lastErr;
+}
+/**
+ * 取分支头的 commit sha。
+ *
+ * 用 /commits/{branch}?per_page=1，不用 /git/ref/heads/x。两个原因：
+ *  1) 分支名里带斜杠（feature/x）时，/git/ref/heads/feature%2Fx 这种拼接很容易拼错；
+ *     /commits/ 那侧对斜杠和编码宽容得多。
+ *  2) 更关键的是**读写的端点不是一个词**：读是单数 /git/ref/，写是复数 /git/refs/。
+ *     之前两处 PATCH 照着读接口写成单数，结果移动分支引用永远 404，
+ *     README 一个字节都写不进去（而书因为有降级路径照样能传，掩盖了很久）。
+ *     现在取头统一走这个函数，PATCH 一律用复数，不再有"照着上一行抄错"的机会。
+ * 它同时接受分支名、tag、sha。
+ * 分支名对不上时（仓库改过默认分支）再问一次仓库并重试。
+ */
+async function readHeadRef(token, base, info){
+  const repoBase = base.replace(/\/git$/, '');
+  const tryHead = async b => {
+    const list = await gh(token, `${repoBase}/commits/${encodeURIComponent(b)}?per_page=1`);
+    if(!Array.isArray(list) || !list.length){
+      const e = new Error(`分支 ${b} 上没有任何提交`);
+      e.status = 404;
+      throw e;
+    }
+    return list[0].sha;
+  };
+  try{
+    return await tryHead(info.default_branch);
+  }catch(e){
+    if(e.status !== 404) throw e;
+    const fresh = await gh(token, repoBase);
+    const b = fresh && fresh.default_branch;
+    if(b && b !== info.default_branch){
+      log(`  默认分支实际是 ${b}（原以为 ${info.default_branch}），改用 ${b}`, 'warn');
+      info.default_branch = b;
+      return tryHead(b);
+    }
+    throw e;
+  }
+}
+
+/** 串行化：所有移动分支引用的操作排队，避免 ref 竞态 */
+let writeQueue = Promise.resolve();
+function serialize(fn){
+  const run = writeQueue.then(fn, fn);
+  writeQueue = run.then(() => {}, () => {});
+  return run;
+}
+
+async function repoInfo(token, repoInput){
+  const s = (repoInput || '').trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/+$/,'');
+  if(!s) throw new Error('请填写仓库名');
+  let owner, name;
+  if(s.includes('/')){ const p = s.split('/'); owner = p[0]; name = p[1]; }
+  else { owner = (await gh(token, 'https://api.github.com/user')).login; name = s; }
+  const full = owner + '/' + name;
+  const r = await gh(token, `https://api.github.com/repos/${full}`);
+  return { owner, repo: name, full, default_branch: r.default_branch || 'main', created: false };
+}
+async function ensureRepo(token, repoInput, isPrivate){
+  try{ return await repoInfo(token, repoInput); }
+  catch(e){
+    if(e.status !== 404) throw e;
+    log(`仓库不存在，尝试创建…`, 'info');
+    const s = (repoInput || '').trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/+$/,'');
+    let owner, name;
+    if(s.includes('/')){ const p = s.split('/'); owner = p[0]; name = p[1]; }
+    else { owner = (await gh(token, 'https://api.github.com/user')).login; name = s; }
+    await gh(token, 'https://api.github.com/user/repos', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, private: !!isPrivate, auto_init: true })
+    });
+    const info = await repoInfo(token, owner + '/' + name);
+    info.created = true;
+    return info;
+  }
+}
+async function listPaths(token, info){
+  try{
+    const r = await withRetry(
+      () => gh(token, `https://api.github.com/repos/${info.full}/git/trees/${info.default_branch}?recursive=1`),
+      { tries: 3, label: '读取文件列表' }
+    );
+    return new Map((r.tree || []).filter(n => n.type === 'blob').map(n => [n.path, n.sha]));
+  }catch(e){
+    if(e.status === 409 || /too large|truncated/i.test(e.message || ''))
+      log('仓库文件过多，整树接口被截断，改为逐文件校验', 'warn');
+    else
+      log(`读取文件列表失败（${e.friendly || e.message}），将逐个校验文件是否存在`, 'warn');
+    return null;
+  }
+}
+async function listAllFiles(token, info){
+  try{
+    const r = await withRetry(
+      () => gh(token, `https://api.github.com/repos/${info.full}/git/trees/${info.default_branch}?recursive=1`),
+      { tries: 3, label: '读取文件列表' }
+    );
+    return (r.tree || []).filter(n => n.type === 'blob')
+      .map(n => ({ path: n.path, size: n.size || 0, sha: n.sha || '' }));
+  }catch(e){ return []; }
+}
+
+/**
+ * 读仓库里某个文本文件。
+ * 有 sha 时走 git/blobs（一次请求、不占 contents 的 rate limit）；
+ * 只有确实不知道 sha 才退回 contents 接口。
+ */
+async function readRepoText(token, info, path, sha){
+  let b64 = '';
+  if(sha){
+    const blob = await gh(token, `https://api.github.com/repos/${info.full}/git/blobs/${sha}`);
+    b64 = String(blob.content || '').replace(/\s+/g, '');
+  }else{
+    const url = `https://api.github.com/repos/${info.full}/contents/` +
+      path.split('/').map(encodeURIComponent).join('/') +
+      `?ref=${encodeURIComponent(info.default_branch)}`;
+    const r = await gh(token, url);
+    b64 = String((r && r.content) || '').replace(/\s+/g, '');
+  }
+  if(!b64) return '';
+  return new TextDecoder().decode(b64ToBytes(b64));
+}
+
+/* =========================================================================
+   9. 上传：并发 blob + 跳过未变更文件
+   ========================================================================= */
+/**
+ * 批量提交：整本书合并成 1 个 commit。
+ *
+ * 速度的两个关键：
+ *  1) blob **并发**创建（CONC=6）。blob 是内容寻址的，不移动分支引用。
+ *     之前逐个串行，300 张图要 300 次往返（30-90 秒）；并发后只要 300/6 次。
+ *  2) **跳过内容未变的文件**。上传前本地算 git blob sha，与仓库里已有的比对，
+ *     相同说明那个 blob 已在 GitHub 上，一个字节都不用传。
+ *
+ * 除了"新建 blob"，同一棵树里还可以顺带做两件事（extra）：
+ *  - extra.refs：[{path, sha}] 直接指向**仓库里已有的 blob**，用来改名/移动文件，
+ *    一个字节都不用重传——GitHub 的 tree 条目本来就支持按 sha 引用。
+ *  - extra.dels：[path] 删除文件，tree 条目里把 sha 写成 null 即可。
+ *    注意不能"省略不写"：base_tree 会把它原样带回来，等于没删。
+ */
+async function commitFilesBatch(token, info, entries, commitMessage, extra){
+  const base = `https://api.github.com/repos/${info.full}/git`;
+
+  /* 自适应并发（AIMD：加性增、乘性减）。
+   *
+   *  固定并发要么太慢（请求排队），要么被 GitHub 二次限流罚到更慢。
+   *  实测 300 文件 / 40ms 往返：固定 6 → 2201ms；固定 16 → 852ms；
+   *  但固定 16 一旦限流就要大量重试，收益被吃掉。
+   *
+   *  做法：起点给高（12），持续成功就缓慢加档；一旦被限流立刻砍半并退避。
+   *  用「分片 + Promise.all」实现 —— 每片内部固定并发、片与片之间可控，
+   *  避免动态增减 worker 带来的计数/退出竞态。
+   */
+  const SLICE = 12;          // 每片并发数
+  const MIN_SLICE = 3, MAX_SLICE = 24;
+  let slice = SLICE, streak = 0;
+  let doneAll = 0;
+  const blobs = [];
+
+  const uploadSlice = async (chunk) => {
+    const out = [];
+    let c = 0;
+    const worker = async () => {
+      while(true){
+        let i = c++;
+        if (i >= chunk.length) return;
+        const e = chunk[i];
+        try{
+          // 限流错误直接冒到这里，不交给 withRetry —— 因为限流要靠"降低并发"
+          // 才能根治，单纯重试只会继续撞墙。
+          const res2 = await gh(token, base + '/blobs', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: e.b64, encoding: 'base64' })
+          });
+          out.push({ path: e.path, mode: '100644', type: 'blob', sha: res2.sha });
+          doneAll++;
+          progSet(doneAll / entries.length * 85,
+            `${progState.text} · 上传文件 <b>${doneAll}</b> / ${entries.length}`);
+        }catch(err){
+          const msg = (err.friendly || '') + ' ' + (err.message || '');
+          if(/rate limit|secondary|abuse|forbidden|限流/i.test(msg)){
+            // 被限流：并发砍半并退避。单纯重试只会继续撞墙，降并发才能根治。
+            slice = Math.max(MIN_SLICE, Math.floor(slice / 2));
+            streak = 0;
+            log(`  GitHub 限流，并发降到 ${slice}`, 'warn');
+            await sleep(2000);
+            // 降并发后就地重试当前文件（不再塞回队列，避免索引错乱）
+            for(let attempt = 1; attempt <= 3; attempt++){
+              try{
+                const again = await gh(token, base + '/blobs', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ content: e.b64, encoding: 'base64' })
+                });
+                out.push({ path: e.path, mode: '100644', type: 'blob', sha: again.sha });
+                doneAll++;
+                break;
+              }catch(e2){
+                if (attempt === 3){ log(`  [失败] ${e.path}：${e2.friendly || e2.message}`, 'err'); break; }
+                await sleep(2000 * attempt);
+              }
+            }
+            continue;
+          }
+          log(`  [失败] ${e.path}：${err.friendly || err.message}`, 'err');
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(slice, chunk.length) }, worker));
+    return out;
+  };
+
+  // 分片步长固定，只让片内并发数变化：
+  // 若跟着 slice 变化走，会漏文件或重复传。
+  const STEP = 12;
+  for(let off = 0; off < entries.length; off += STEP){
+    const chunk = entries.slice(off, off + STEP);
+    const got = await uploadSlice(chunk);
+    blobs.push(...got);
+    // 连续整片成功到阈值就加一档（不超过上限）
+    streak++;
+    if(streak >= 3 && slice < MAX_SLICE){ slice++; streak = 0; }
+  }
+
+  const refs = (extra && extra.refs) || [];   // 引用已有 blob（改名）
+  const dels = (extra && extra.dels) || [];   // 删除（sha 置 null）
+  if(!blobs.length && !refs.length && !dels.length) return { committed: 0, failed: entries.length };
+
+  const treeEntries = blobs
+    .concat(refs.map(r => ({ path: r.path, mode: '100644', type: 'blob', sha: r.sha })))
+    .concat(dels.map(p => ({ path: p, mode: '100644', type: 'blob', sha: null })));
+
+  // 读 ref → 建 tree → 建 commit → 移 ref：整个过程放进串行区，
+  // 分支头必须在锁内现取（锁外读的 sha 建 blob 期间就过期了）。
+  await serialize(() => withRetry(async () => {
+    const parentSha = await readHeadRef(token, base, info);
+    const tree = await gh(token, base + '/trees', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base_tree: parentSha, tree: treeEntries })
+    });
+    const commit = await gh(token, base + '/commits', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: commitMessage, tree: tree.sha, parents: [parentSha] })
+    });
+    // 分支名可能刚被 readHeadRef 纠正过，PATCH 必须用纠正后的名字
+    return gh(token, `${base}/refs/heads/${encodeURIComponent(info.default_branch)}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sha: commit.sha, force: false })
+    });
+  }, { tries: 4, label: '提交' }));
+
+  return { committed: blobs.length, failed: entries.length - blobs.length, refs: refs.length, dels: dels.length };
+}
+
+/** 逐文件上传（批量提交的降级路径） */
+async function putFile(token, info, path, base64, message, knownSha){
+  const url = `https://api.github.com/repos/${info.full}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const resolveSha = async () => {
+    if(knownSha === false) return false;
+    if(typeof knownSha === 'string' && knownSha) return knownSha;
+    try{ const cur = await gh(token, url); return cur.sha || true; }
+    catch(e){ if(e.status === 404) return false; throw e; }
+  };
+  return serialize(() => withRetry(async () => {
+    const sha = await resolveSha();
+    const body = { message, content: base64, branch: info.default_branch };
+    if(typeof sha === 'string') body.sha = sha;
+    return gh(token, url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  }, { tries: 4, label: path }));
+}
+
+async function uploadFilesIndividually(token, info, todo, existing){
+  let up = 0, fail = 0;
+  for(let i = 0; i < todo.length; i++){
+    const f = todo[i];
+    progSet(i / todo.length * 100);
+    const isUpdate = !!(existing && existing.has(f.path));
+    const known = existing ? (existing.has(f.path) ? existing.get(f.path) : false) : undefined;
+    try{
+      await putFile(token, info, f.path, f.b64, `${isUpdate ? 'update' : 'add'} ${f.path}`, known);
+      if(existing) existing.set(f.path, null);
+      up++;
+    }catch(e){ fail++; log(`  [失败] ${f.path}：${e.friendly || e.message}`, 'err'); }
+  }
+  return { up, fail, skip: 0 };
+}
+
+/* =========================================================================
+   10. 上传编排
+   ========================================================================= */
+async function updateReadme(token, info){
+  const files = await listAllFiles(token, info);
+  const booksMap = new Map();
+  for(const f of files){
+    const i = f.path.indexOf('/');
+    if(i < 0) continue;
+    const dir = f.path.slice(0, i);
+    if(dir === 'images' || dir === '.github') continue;
+    if(!booksMap.has(dir)) booksMap.set(dir, { md:false, pdf:false, epub:false, cover:null, images:0, kb:0 });
+    const rec = booksMap.get(dir);
+    const rest = f.path.slice(i + 1);
+    const bn = baseName(f.path);
+    if(/\.md$/i.test(bn) && bn === dir + '.md'){ rec.md = true; rec.kb += f.size || 0; }
+    else if(/\.pdf$/i.test(bn) && bn === dir + '.pdf') rec.pdf = true;
+    else if(/\.epub$/i.test(bn) && bn === dir + '.epub') rec.epub = true;
+    else if(/^cover\.(jpe?g|png|webp|gif|svg)$/i.test(bn) && !rest.includes('/')) rec.cover = bn;
+    else if(rest.startsWith('images/')) rec.images++;
+  }
+  // 书库索引：书名/作者/出版社/字数/封面，由上传时写入
+  let libIndex = {};
+  try{
+    const idxFile = files.find(x => x.path === 'books.json');
+    const txt = await readRepoText(token, info, 'books.json', idxFile ? idxFile.sha : '');
+    if(txt) libIndex = JSON.parse(txt) || {};
+  }catch(e){ /* 没有索引就按文件夹名显示，不影响 README 生成 */ }
+
+  const rows = [...booksMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+  /* 链接用的路径：只编码真正会破坏 Markdown/URL 的字符，中文原样保留。
+     encodeURIComponent 会把整串中文变成 %E7%BA%A2… —— 能用，但 README 源码没法读，
+     用户想手改一条链接都无从下手。 */
+  const mdUrl = p => String(p).split('/').map(seg =>
+    seg.replace(/[\s()<>#%?\[\]&"'`]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))
+  ).join('/');
+  const totalImages = rows.reduce((a, [, r]) => a + r.images, 0);
+  const totalChars = rows.reduce((a, [d]) => a + (Number((libIndex[d] || {}).chars) || 0), 0);
+
+  // 表格单元格里的文本：先转义 HTML，再转义竖线（否则会把表格切断）
+  const cell = s => escapeHtml(String(s == null ? '' : s)).replace(/\|/g, '\\|');
+
+  /* 页首打上生成时间。没有这一行，"首页到底刷没刷新"就只能靠翻 commit 历史猜 ——
+     而 GitHub 目录列表显示的是**该目录里文件最后一次被修改**的时间，
+     只重建 README 是不碰这些文件的，目录时间当然不会变，很容易被误读成"没上传"。 */
+  const now = new Date();
+  const two = n => String(n).padStart(2, '0');
+  const stamp = now.getFullYear() + '-' + two(now.getMonth() + 1) + '-' + two(now.getDate()) +
+                ' ' + two(now.getHours()) + ':' + two(now.getMinutes());
+
+  /* 标题用仓库名，不写死。这个工具不止用来放「Skill」，
+     写死一个名字会让别人 clone 过去之后首页文不对题。 */
+  const title0 = String(info.repo || '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || '书库';
+
+  let md = '<div align="center">\n\n# ' + title0 + '\n\n';
+  md += '共 **' + rows.length + '** 个';
+  if(totalChars) md += ' · 约 **' + fmtChars(totalChars) + '**';
+  md += ' · **' + totalImages + '** 张配图\n\n';
+  md += '<sub>最近更新 ' + stamp + '</sub>\n\n</div>\n\n';
+  md += '每本书一个目录：**目录名/cover.xxx**（封面）、**目录名/目录名.md**（正文）、'
+      + '**目录名/images/**（配图）。\n\n';
+  md += '> GitHub 上直接点开 `.md` 就能读；想要原书就下 `.epub`。\n\n';
+  /* 小标题同样不写死「技能列表」—— 主标题已经跟着仓库名走了，
+     下面还挂着个「技能列表」会让人以为这个仓库只能放那一种东西。 */
+  md += '---\n\n## 书目\n\n';
+  md += '| 封面 | 名称 | 文件 | 规模 |\n|:---:|---|---|---|\n';
+
+  for(const [dir, r] of rows){
+    const meta = libIndex[dir] || {};
+    const title = String(meta.title || '').trim() || dir;
+    const u = mdUrl(dir);
+
+    /* 只认仓库里真实扫到的封面文件。books.json 里记着名字、但文件没传上去或已被删时，
+       再照着索引写一个 <img> 就是一张裂图 —— 不如老实显示「无封面」，一眼能看出有问题。 */
+    const coverFile = r.cover || '';
+    const shot = coverFile
+      ? '<img src="' + u + '/' + mdUrl(coverFile) + '" width="76" alt="' + cell(title) + '">'
+      : '<sub>无封面</sub>';
+
+    const titleCell = r.md
+      ? '<a href="' + u + '/' + u + '.md"><b>' + cell(title) + '</b></a>'
+      : '<b>' + cell(title) + '</b>';
+    const subBits = [];
+    if(meta.author) subBits.push(cell(meta.author));
+    if(meta.publisher) subBits.push(cell(meta.publisher));
+    const nameCell = titleCell + (subBits.length ? '<br><sub>' + subBits.join(' · ') + '</sub>' : '');
+
+    const dl = [];
+    if(r.md)   dl.push('[md](' + u + '/' + u + '.md)');
+    if(r.pdf)  dl.push('[pdf](' + u + '/' + u + '.pdf)');
+    if(r.epub) dl.push('[epub](' + u + '/' + u + '.epub)');
+
+    const sizeBits = [];
+    if(meta.chars) sizeBits.push(fmtChars(meta.chars));
+    if(r.images) sizeBits.push(r.images + ' 图');
+    if(!meta.chars && r.kb) sizeBits.push(fmtSize(r.kb));
+    /* books.json 里记着这本书是哪天传的，顺手显示出来 ——
+       以后不用再去点开文件夹看时间戳。老书没有这条记录就不显示。 */
+    if(meta.updated) sizeBits.push('<sub>' + cell(meta.updated) + '</sub>');
+
+    md += '| ' + shot + ' | ' + nameCell + ' | ' + (dl.join(' · ') || '—') +
+          ' | ' + (sizeBits.join('<br>') || '—') + ' |\n';
+  }
+  /* 页脚带上版本号。首页是自动重建的，出问题时第一件事就是
+     确认"这份 README 是哪一版工具生成的" —— 写在这里一眼就能看到。 */
+  const ver = (document.documentElement && document.documentElement.dataset.v) || '';
+  md += '\n---\n\n> 本文件由 book2md ' + (ver ? 'v' + ver + ' ' : '')
+      + '自动维护，每次上传后自动重建\n';
+
+  // 让"封面到底识别到几个"这件事可见，而不是等用户去首页数
+  const withCover = rows.filter(([, r]) => r.cover).length;
+  const noCover = rows.filter(([, r]) => !r.cover).map(([d]) => d);
+  log(`  [README] ${rows.length} 个条目，${withCover} 个有封面` +
+      (noCover.length ? `；无封面：${noCover.slice(0, 5).join('、')}${noCover.length > 5 ? ' 等' : ''}` : ''),
+      noCover.length ? 'warn' : 'ok');
+
+  /* 没封面的目录，把它顶层实际有哪些文件列出来。
+     一眼就能分清是「封面压根没传上去」还是「有图但名字不叫 cover.*」。 */
+  for(const d of noCover.slice(0, 3)){
+    const names = files
+      .filter(f => f.path.startsWith(d + '/') && !f.path.slice(d.length + 1).includes('/'))
+      .map(f => baseName(f.path));
+    log(`    ${d}/ 顶层文件：${names.length ? names.join('、') : '（空）'}`, 'info');
+  }
+
+  // README 更新同样会移动分支引用，必须串行化，且分支头在锁内现取
+  const base = `https://api.github.com/repos/${info.full}/git`;
+  return serialize(() => withRetry(async () => {
+    const parentSha = await readHeadRef(token, base, info);
+    const blob = await gh(token, base + '/blobs', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: bytesToBase64(enc.encode(md)), encoding: 'base64' })
+    });
+    /* 顺手把 .gitattributes 写进同一个 commit —— 不额外多花一次 API 调用。
+       它解决两件只看 GitHub 主页就能发现的事：
+         ① 语言条被资源文件带偏：SVG 属于 markup 语言，会被 linguist 计入统计，
+            一仓库自动生成的 cover.svg 能把语言条顶成「SVG 98%」，看着像个前端项目；
+         ② 传书时 diff 刷屏：几百张图片会列出几百条二进制改动。 */
+    const gaBlob = await gh(token, base + '/blobs', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: bytesToBase64(enc.encode(gitattributesText())), encoding: 'base64' })
+    });
+    const tree = await gh(token, base + '/trees', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base_tree: parentSha, tree: [
+      { path: 'README.md', mode: '100644', type: 'blob', sha: blob.sha },
+      { path: '.gitattributes', mode: '100644', type: 'blob', sha: gaBlob.sha }
+    ] })
+    });
+    const commit = await gh(token, base + '/commits', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'update README book index', tree: tree.sha, parents: [parentSha] })
+    });
+    // 分支名可能刚被 readHeadRef 纠正过，PATCH 必须用纠正后的名字
+    await gh(token, `${base}/refs/heads/${encodeURIComponent(info.default_branch)}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sha: commit.sha, force: false })
+    });
+    return { commit: commit.sha, bytes: enc.encode(md).length, entries: rows.length };
+  }, { tries: 4, label: '更新 README' }));
+}
+
+/** 需要时才把 EPUB 原件编成 base64。
+ *
+ *  不能放在转换完成时算：实测 20MB → 157ms、常驻 53MB（base64 在 JS 里按 UTF-16 存，
+ *  是原体积的 2.6 倍），90MB 的书就是约 700ms + 约 240MB —— 而"保留原件"默认是关的，
+ *  那份 base64 根本不会上传。改成上传时才算，不勾就一分内存都不占。
+ */
+async function ensureOrigB64(b){
+  if(!b || b.kind !== 'epub' || !b.keepOrig || b.origB64 || !b.file) return (b && b.origB64) || '';
+  try{
+    const ab = await b.file.arrayBuffer();
+    b.origB64 = bytesToBase64(new Uint8Array(ab));
+  }catch(e){
+    b.origB64 = null;
+  }
+  return b.origB64 || '';
+}
+
+async function uploadBook(b){
+  const token = $('token').value.trim();
+  const repoInput = $('repo').value.trim();
+  if(!token) throw new Error('缺少 GitHub Token');
+  if(!repoInput) throw new Error('缺少仓库名');
+
+  const folder = safeFolder(b.folder);
+  const isPrivate = $('visibility').checked;
+  log(`▶ [${b.name}] 目标仓库：${repoInput}`, 'info');
+
+  const repoKey = repoInput.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/+$/,'');
+  let info = (sharedRepoInfo && sharedRepoInfo.key === repoKey) ? sharedRepoInfo : null;
+  if(!info){
+    info = await ensureRepo(token, repoInput, isPrivate);
+    info.key = repoKey;
+    sharedRepoInfo = info;
+    if(info.created) log(`  已创建仓库 ${info.full}`, 'ok');
+  }
+
+  const existing = await listPaths(token, info);
+
+  /* 保留原件：base64 到这里才懒算（转换时算太亏，见 convertBook() 的注释）。
+     用户也可能在"加完书之后"才勾上这个框 —— 那时 b.origB64 是空的，所以每次都重新确认一遍。 */
+  if(b.kind === 'epub' && b.keepOrig && !b.origB64 && b.file && !(await ensureOrigB64(b))){
+    log('  [提醒] 读原件失败，这次不上传 EPUB 原件', 'warn');
+  }
+
+  // 组装文件（带原始字节用于本地算 sha）
+  const files = [];
+  if(b.kind === 'pdf'){
+    files.push({ path: `${folder}/${folder}.pdf`, b64: b.base64, bytes: b.base64 ? b64ToBytes(b.base64) : null });
+  }else{
+    files.push({ path: `${folder}/${folder}.md`, b64: b.base64, bytes: b.base64 ? b64ToBytes(b.base64) : null });
+    for(const [name, bytes] of b.images) files.push({ path: `${folder}/images/${name}`, b64: bytesToBase64(bytes), bytes });
+    if(b.keepOrig && b.origB64) files.push({ path: `${folder}/${folder}.epub`, b64: b.origB64, bytes: b64ToBytes(b.origB64) });
+  }
+
+  /* 封面：有真封面就用真的，没有就生成一张文字封面。
+     PDF 和直接上传的 .md 本来就不带封面（封面只从 EPUB 的 OPF 里取），
+     以前这种书在 README 里只能写「无封面」，一排书看过去像坏了几本。
+     现在统一补一张 SVG —— 文件名仍是 cover.*，README 的扫描规则不用改。 */
+  let coverName = '';
+  if(b.cover && b.cover.bytes && b.cover.bytes.length){
+    const ext = (b.cover.name.match(/\.[a-z0-9]+$/i) || ['.jpg'])[0].toLowerCase();
+    coverName = 'cover' + ext;
+    files.push({ path: `${folder}/${coverName}`, b64: bytesToBase64(b.cover.bytes), bytes: b.cover.bytes });
+  }else{
+    const svgBytes = enc.encode(makeTextCover((b.meta && b.meta.title) || folder, b.kind));
+    coverName = 'cover.svg';
+    files.push({ path: `${folder}/${coverName}`, b64: bytesToBase64(svgBytes), bytes: svgBytes });
+    log(`  [封面] 源文件本身不带封面，已生成文字封面 ${coverName}`, 'info');
+  }
+  b.coverFile = coverName;
+
+  /* 书籍目录页：GitHub 打开 `书名/` 时会自动渲染它。
+     没有它，目录页就是一列文件名 —— 封面缩略图、作者、下载入口全看不见，
+     想下载还得先点进正文再从里面找链接。 */
+  const pageText = bookPageMd(b, folder, coverName, new Date().toISOString().slice(0, 10));
+  const pageBytes = enc.encode(pageText);
+  files.push({ path: `${folder}/README.md`, b64: bytesToBase64(pageBytes), bytes: pageBytes });
+
+  /* 书库索引：books.json 记下每本书的书名 / 作者 / 封面文件名。
+     README 靠它把「这是哪本书」写清楚，而不是只露出一个规范化后的文件夹名。
+     只合并自己这一条，别人的条目原样保留；读不到就重建，不影响书籍上传。 */
+  let libIndex = {};
+  try{
+    const idxSha = existing ? (existing.get('books.json') || '') : '';
+    const txt = await readRepoText(token, info, 'books.json', idxSha);
+    if(txt) libIndex = JSON.parse(txt) || {};
+  }catch(e){ /* 文件不存在或不是合法 JSON：重建一份即可 */ }
+
+  libIndex[folder] = {
+    title: String((b.meta && b.meta.title) || folder).trim(),
+    author: (b.meta && b.meta.creator) || '',
+    publisher: (b.meta && b.meta.publisher) || '',
+    language: (b.meta && b.meta.language) || '',
+    chars: (b.markdown || '').length,
+    images: b.images.length,
+    cover: coverName || '',
+    pdf: b.kind === 'pdf',
+    epub: b.kind === 'epub' && !!b.keepOrig,
+    /* 上面这一条要等 origB64 就绪才准：懒算放在这里的原因见 convertBook() 的注释 */
+    updated: new Date().toISOString().slice(0, 10)
+  };
+  const idxBytes = enc.encode(JSON.stringify(libIndex, null, 2) + '\n');
+  files.push({ path: 'books.json', b64: bytesToBase64(idxBytes), bytes: idxBytes });
+
+  let up = 0, skip = 0, fail = 0;
+  /* 跳过分两种，必须分开统计 —— 混在一起会让日志说假话：
+       same  = 内容真的一个字节都没变（跳过是对的）
+       held  = 内容**变了**，但被「已存在文件跳过不覆盖」那个开关挡住了（这是个坑）
+     以前只要勾了开关就直接 continue，压根不比对，日志却统一写"内容未变"，
+     导致"改了转换逻辑 → 重传 → 看着成功 → GitHub 上一点没变"这种鬼打墙。 */
+  let skipSame = 0, heldFiles = [];
+  const MAX_BYTES = 90 * 1024 * 1024;
+  const todo = [];
+
+  for(const f of files){
+    if(existing && existing.has(f.path)){
+      // 先比对 sha（纯本地计算，不花 API 调用），再决定要不要被开关挡住
+      let same = false;
+      if(f.bytes){
+        try{ same = gitBlobSha1(f.bytes) === existing.get(f.path); }catch(e){}
+      }
+      if(same){ skip++; skipSame++; continue; }
+      if(b.skipExisting){ skip++; heldFiles.push(f.path); continue; }
+    }
+    if(typeof f.b64 !== 'string' || !f.b64.length){ fail++; log(`  [失败] ${f.path}：内容为空`, 'err'); continue; }
+    const approx = Math.floor(f.b64.length * 3 / 4);
+    if(approx > MAX_BYTES){ fail++; log(`  [失败] ${f.path}：约 ${fmtSize(approx)}，超过 100MB 限制`, 'err'); continue; }
+    todo.push(f);
+  }
+  if(skipSame) log(`  ${skipSame} 个文件与仓库完全一致，跳过上传`, 'ok');
+  // 记下"没变"的是哪几个，上传结束后能直接说清"这本书为什么没动"
+  const sameFiles = files.filter(f => existing && existing.has(f.path) && !todo.includes(f) && !heldFiles.includes(f.path))
+                          .map(f => f.path);
+  if(heldFiles.length){
+    log(`  ${heldFiles.length} 个文件内容和仓库**不一样**，但被「已存在文件跳过不覆盖」挡住了，没有提交`, 'warn');
+    log(`    ${heldFiles.slice(0, 6).join('、')}${heldFiles.length > 6 ? ' 等' : ''}`, 'info');
+    log(`    想让它们更新：取消勾选「已存在文件跳过不覆盖」，再传一次`, 'warn');
+  }
+
+  if(todo.length){
+    if(useBatchCommit){
+      try{
+        const r = await commitFilesBatch(token, info, todo, `${b.skipExisting ? 'update' : 'add'} ${folder}（${todo.length} 个文件）`);
+        up += r.committed; fail += r.failed;
+        log(`  ✔ 已提交 ${r.committed} 个文件（1 个 commit）`, 'ok');
+      }catch(e){
+        log(`  批量提交失败（${e.friendly || e.message}），改为逐文件上传`, 'warn');
+        up = 0;
+        const per = await uploadFilesIndividually(token, info, todo, existing);
+        up += per.up; fail += per.fail; skip += per.skip;
+      }
+    }else{
+      const per = await uploadFilesIndividually(token, info, todo, existing);
+      up += per.up; fail += per.fail; skip += per.skip;
+    }
+  }
+
+  try{
+    const r = await updateReadme(token, info);
+    log(`  [更新] README.md：${r.entries} 个条目，commit ${String(r.commit).slice(0, 7)}`, 'ok');
+  }catch(e){
+    log(`  [提示] README 生成失败（不影响书籍上传）：${e.friendly || e.message}`, 'warn');
+  }
+
+  let tail = `✔ [${b.name}] 完成：上传 ${up}，跳过 ${skip}，失败 ${fail}`;
+  if(heldFiles.length) tail += `（其中 ${heldFiles.length} 个是"该更新但被设置挡住"，不是真的没变化）`;
+  log(tail, fail || heldFiles.length ? 'err' : 'ok');
+  if(!up && !fail && heldFiles.length){
+    log(`  ⚠ 这次上传其实没有向仓库提交任何内容，GitHub 上的时间自然不会变`, 'warn');
+  }
+  return { uploaded: up, skipped: skip, failed: fail, held: heldFiles.length, sameFiles };
+}
+
+/* =========================================================================
+   11. UI
+   ========================================================================= */
+const books = [];
+let busy = false;
+let sharedRepoInfo = null;
+let skipExisting = false;
+let useBatchCommit = true;
+let autoConvert = true;
+let uploadConcurrency = 6;
+
+function tagClassOf(b){
+  return b.state === 'done' ? (b.noChange ? 'tag warn' : 'tag ok')
+       : b.state === 'err' ? 'tag err'
+       : b.state === 'ready' ? (b.check && b.check.errorCount ? 'tag warn' : 'tag ok')
+       : b.state === 'converting' ? 'tag busy' : 'tag';
+}
+
+/** 自检面板的展开/收起 */
+function bindCheckPanel(i){
+  const ckh = $('ckh-' + i);
+  if(ckh) ckh.onclick = () => {
+    const p = $('ck-' + i);
+    const ul = p && p.querySelector('.ck-list');
+    if(!ul) return;
+    const show = ul.style.display !== 'block';
+    ul.style.display = show ? 'block' : 'none';
+    const t = p.querySelector('.ck-toggle');
+    if(t) t.textContent = show ? '收起' : '展开';
+  };
+}
+
+/** 释放这本书预览用的 blob URL。
+ *  预览图是 `URL.createObjectURL` 造出来的，不 revoke 就一直占着内存：
+ *  一本书几百张图，重转换几次、换几本书之后内存只涨不降，
+ *  而用户完全看不出发生了什么。导出 HTML 那个是临时链接，单独处理。
+ */
+function releaseImgUrls(b){
+  if(!b || !b._imgUrls) return;
+  for(const u of b._imgUrls.values()){
+    try{ URL.revokeObjectURL(u); }catch(e){}
+  }
+  b._imgUrls = null;
+}
+
+/** 哪几本书共用了同一个仓库文件夹（键 = 规范化后的文件夹名，值 = 行号数组） */
+function dupFolders(){
+  const seen = new Map();
+  books.forEach((b, i) => {
+    const f = safeFolder(b.folder || '');
+    if(!f) return;
+    if(!seen.has(f)) seen.set(f, []);
+    seen.get(f).push(i);
+  });
+  return seen;
+}
+
+/** 重名的文件夹就地标红，并在列表顶上给一句人话提示 */
+function refreshFolderWarnings(){
+  const seen = dupFolders();
+  books.forEach((b, i) => {
+    const el = $('folder-' + i);
+    if(!el) return;
+    const f = safeFolder(b.folder || '');
+    const mates = (seen.get(f) || []).filter(k => k !== i);
+    if(mates.length){
+      el.classList.add('dup');
+      el.title = `与《${books[mates[0]].name}》用了同一个文件夹「${f}」，后上传的那本会覆盖先上传的。改一个名字再传。`;
+    }else{
+      el.classList.remove('dup');
+      el.title = '仓库里的文件夹名（改了就是另一本书，不会互相覆盖）';
+    }
+  });
+  const hint = $('dupHint');
+  if(hint){
+    const dups = [...seen.entries()].filter(([, idx]) => idx.length > 1);
+    if(dups.length){
+      hint.style.display = 'block';
+      hint.innerHTML = '⚠ 有 ' + dups.length + ' 个文件夹重名：' +
+        dups.map(([f, idx]) => escapeHtml(f) + '（' + idx.map(k => escapeHtml(books[k].name)).join('、') + '）').join('；') +
+        '。同名会互相覆盖，上传前先改掉一个。';
+    }else{
+      hint.style.display = 'none';
+      hint.innerHTML = '';
+    }
+  }
+}
+
+/** 上传前拦一道重名。返回 true 表示"已拦下，别传了" */
+function blockIfDupFolder(i){
+  const b = books[i];
+  if(!b) return false;
+  const f = safeFolder(b.folder || '');
+  const mates = (dupFolders().get(f) || []).filter(k => k !== i);
+  if(!mates.length) return false;
+  log(`✗ [${b.name}] 与《${books[mates[0]].name}》用了同一个文件夹「${f}」，` +
+      `上传会互相覆盖、README 里最后只剩一本。请把其中一本的文件夹名改掉再传。`, 'err');
+  $('logBox').open = true;
+  refreshFolderWarnings();
+  return true;
+}
+
+/** 就地刷新第 i 行：状态徽章 + 自检面板 + 底部汇总。
+ *
+ *  为什么不能图省事调 render()：render() 会 `list.innerHTML=''` 重建每一行，
+ *  用户正在 textarea 里编辑时，那个 textarea 会被销毁再新建 ——
+ *  焦点丢失、光标跳到开头、滚动位置归零。打字打到一半被打断，体验极差。
+ */
+function refreshRow(i){
+  const b = books[i];
+  const list = $('bookList');
+  const row = list && list.children[i];
+  if(!b || !row) return;
+  const tag = row.querySelector('.row-h > span[class^="tag"]');
+  if(tag){
+    tag.className = tagClassOf(b);
+    tag.textContent = b.stateLabel || (b.state === 'pending' ? '待转换' : '');
+  }
+  const panel = $('ck-' + i);
+  const html = b.check ? checkPanelHtml(i, b) : '';
+  if(panel){
+    if(html){
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      panel.replaceWith(tmp.firstElementChild);
+      bindCheckPanel(i);
+    }else{
+      panel.remove();
+    }
+  }else if(html){
+    row.insertAdjacentHTML('beforeend', html);
+    bindCheckPanel(i);
+  }
+  updateButtonsAndSummary();
+}
+
+/** 底部按钮状态与自检汇总（render() 和 refreshRow() 共用） */
+function updateButtonsAndSummary(){
+  const readyCount = books.filter(b => b.state === 'ready').length;
+  const pendingCount = books.filter(b => b.kind === 'epub' && b.state === 'pending').length;
+  $('uploadAll').disabled = busy || !readyCount;
+  // 上传过程中不覆盖按钮文字：若无条件重写，「上传中…」会立刻变回「上传全部」，
+  // 用户会误以为上传已结束（甚至再点一次开始新一轮）。
+  if(!busy){
+    $('uploadAll').textContent = readyCount ? `上传全部已就绪（${readyCount}）` : '上传全部已就绪';
+    $('convertAll').textContent = pendingCount ? `转换全部待处理（${pendingCount}）` : '转换全部待处理';
+    $('convertAll').style.display = pendingCount ? '' : 'none';
+  }
+  $('convertAll').disabled = busy || !pendingCount;
+  const rb = $('rebuildBtn');
+  if(rb) rb.disabled = busy || !$('repo').value.trim() || !$('token').value.trim();
+  const mb = $('manageBtn');
+  if(mb) mb.disabled = busy || !$('repo').value.trim() || !$('token').value.trim();
+  $('clearAll').disabled = busy || !books.length;
+
+  const sumEl = $('ckSum');
+  const epubs = books.filter(b => b.kind === 'epub' && b.check);
+  if(epubs.length){
+    const bad = epubs.filter(b => b.check.errorCount > 0);
+    const warn = epubs.filter(b => !b.check.errorCount && b.check.warnCount);
+    sumEl.style.display = 'flex';
+    sumEl.innerHTML = bad.length
+      ? `<span class="ck-badge err">${bad.length} 本有错误</span><span class="ck-sum">${escapeHtml(bad.map(b => b.name).join('、'))}</span>`
+      : warn.length
+        ? `<span class="ck-badge warn">${warn.length} 本有提醒</span><span class="ck-sum">全部无致命错误，可正常上传</span>`
+        : `<span class="ck-badge ok">自检通过</span><span class="ck-sum">${epubs.length} 本均无问题</span>`;
+  }else{
+    sumEl.style.display = 'none';
+  }
+}
+
+function checkPanelHtml(i, b){
+  const c = b.check;
+  if(!c) return '';
+  const errs = c.issues.filter(x => x.level === 'err');
+  const warns = c.issues.filter(x => x.level === 'warn');
+  const open = c.errorCount > 0;
+  const badge = c.errorCount
+    ? `<span class="ck-badge err">${c.errorCount} 个错误</span>`
+    : (warns.length ? `<span class="ck-badge warn">${warns.length} 处提醒</span>`
+                    : `<span class="ck-badge ok">自检通过</span>`);
+  const rows = errs.concat(warns).map(x =>
+    `<li class="${x.level}">${x.level === 'err' ? '[错误] ' : '[提醒] '}${escapeHtml(x.msg)}</li>`).join('');
+  return `<div class="ck-panel" id="ck-${i}">
+      <div class="ck-hd" id="ckh-${i}">
+        ${badge}
+        <span class="ck-sum">${c.errorCount ? '这些问题会让 GitHub 渲染出错' : (warns.length ? '不影响使用，但值得知道' : '标记成对、表格齐整、图片齐全')}</span>
+        ${c.issues.length ? `<span class="ck-toggle">${open ? '收起' : '展开'}</span>` : ''}
+      </div>
+      ${c.issues.length ? `<ul class="ck-list"${open ? '' : ' style="display:none"'}>${rows}</ul>` : ''}
+    </div>`;
+}
+
+function render(){
+  const list = $('bookList');
+  if(!list) return;
+  list.innerHTML = '';
+  $('emptyHint').style.display = books.length ? 'none' : 'block';
+
+  books.forEach((b, i) => {
+    const d = document.createElement('div');
+    d.className = 'row';
+    const isPdf = b.kind === 'pdf';
+    const detail = isPdf
+      ? `PDF · ${fmtSize(b.size)} · 原样上传`
+      : (b.state === 'ready' || b.state === 'done')
+        ? `EPUB · ${fmtSize(b.size)} · ${b.images.length} 图 · ${(b.markdown||'').length} 字符`
+          + (b.cover ? '' : ' · 无真封面（自动生成）')   // 上传前就看得见，不必等 README 生成才发现
+        : `EPUB · ${fmtSize(b.size)} · 待转换`;
+    const tagCls = tagClassOf(b);
+    const tagTxt = b.stateLabel || (b.state === 'pending' ? '待转换' : '');
+
+    // 默认收起：进度中的书自动展开，已完成的书收起只显一行摘要
+    // 进度中的书自动展开，完成后自动收起（只跟随状态过渡，不覆盖用户手动展开）
+    if(b.open == null) b.open = (b.state === 'converting');
+    else if(b.state !== 'converting' && b._wasConverting){ b.open = false; }
+    b._wasConverting = (b.state === 'converting');
+    d.className = 'row' + (b.open ? ' open' : '');
+
+    const isDone = b.state === 'ready' || b.state === 'done';
+    const quick = isDone
+      ? `<button class="sm" id="up-${i}">上传</button>`
+      : `<button class="sm" id="cv-${i}">转换</button>`;
+
+    d.innerHTML = `
+      <div class="row-h">
+        <span class="caret">▸</span>
+        <div class="ftype ${isPdf ? 'pdf' : 'epub'}">${isPdf ? 'PDF' : 'EPUB'}</div>
+        <div class="fname"><b title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</b><span>${escapeHtml(detail)}</span></div>
+        <span class="${tagCls}">${escapeHtml(tagTxt)}</span>
+        <span class="quick">${quick}</span>
+      </div>
+      ${isDone ? `<div class="row-b">
+        <input type="text" id="folder-${i}" value="${escapeHtml(b.folder)}" placeholder="仓库内文件夹名" />
+        <button class="sm" id="cv-${i}">重新转换</button>
+        <button class="sm" id="pvbtn-${i}">预览</button>
+        ${isPdf ? '' : `<button class="sm" id="exp-${i}" title="存成一份图片全内嵌的 HTML，用浏览器打开就是全书效果">存成 HTML</button>`}
+        <button class="sm" id="up2-${i}">上传此文件</button>
+        <button class="sm" id="rm-${i}">移除</button>
+        <textarea id="md-${i}" rows="4" placeholder="可直接编辑 Markdown"></textarea>
+        <div class="pv" id="pv-${i}" style="display:none"></div>
+      </div>` : `<div class="row-b">
+        <button class="sm" id="cv2-${i}">转换为 Markdown</button>
+        <button class="sm" id="rm-${i}">移除</button>
+      </div>`}
+      ${b.check ? checkPanelHtml(i, b) : ''}
+    `;
+    list.appendChild(d);
+
+    // 性能关键：**收起的行不要把 markdown 塞进 textarea**。
+    // 一本书的正文可达数百 KB～数 MB，10 本书每次 render 就要往 DOM 里灌十几 MB 文本，
+    // 实测单次 render 800ms+、批量上传期间累计近 20 秒 —— 而图片上传完全不碰 DOM，
+    // 所以用户感觉"图片很快、markdown 很慢"。展开时再按需填入即可。
+    const ta = $('md-' + i);
+    if(ta && b.open) ta.value = b.markdown || '';
+  });
+
+  books.forEach((b, i) => {
+    // 点击整行切换展开/收起（点按钮时不触发）
+    const rowEl = list.children[i];
+    const head = rowEl && rowEl.querySelector('.row-h');
+    if(head) head.onclick = e => {
+      if(e.target.closest('button') || e.target.closest('input')) return;
+      b.open = !b.open;
+      render();
+      // 展开时才把正文灌进 textarea（收起的行保持空，省下大量 DOM 开销）
+      if(b.open){
+        const ta = $('md-' + i);
+        if(ta && !ta.value && b.markdown) ta.value = b.markdown;
+      }
+    };
+    // 快捷按钮（收起时可用）与展开后的按钮同一个动作
+    const bind = (id, fn) => { const el = $(id); if(el) el.onclick = e => { e.stopPropagation(); fn(); }; };
+    bind('cv-' + i, () => convertBook(i));
+    bind('cv2-' + i, () => convertBook(i));
+    bind('up-' + i, () => doUpload(i));
+    bind('up2-' + i, () => doUpload(i));
+    bind('rm-' + i, () => { releaseImgUrls(b); books.splice(i, 1); render(); });
+    /* 文件夹名是手填的，改完立刻查重名 —— 撞车会静默覆盖，必须当场看见 */
+    const fi = $('folder-' + i);
+    if(fi) fi.addEventListener('input', () => { b.folder = fi.value; refreshFolderWarnings(); saveDrafts(); });
+    const expBtn = $('exp-' + i);
+    if(expBtn) expBtn.onclick = () => {
+      const ta = $('md-' + i);
+      const snap = Object.assign({}, b, { markdown: (ta && ta.value) || b.markdown || '' });
+      const html = exportPreviewHtml(snap);
+      const base = String((b.meta && b.meta.title) || b.folder || b.name || 'preview')
+        .replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
+      const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = base + '.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      log(`  [预览] 已存出 ${base}.html（${Math.round(html.length / 1024)} KB，${(b.images || []).length} 张图已内嵌）`, 'ok');
+    };
+    const pvbtn = $('pvbtn-' + i);
+    /* 把这本书的内存图片挂成 blob URL，预览里才能看到真图 */
+    const imgUrls = () => {
+      if(!b._imgUrls){
+        b._imgUrls = new Map();
+        for(const [name, bytes] of (b.images || [])){
+          try{ b._imgUrls.set('images/' + name, URL.createObjectURL(new Blob([bytes]))); }catch(e){}
+        }
+      }
+      return b._imgUrls;
+    };
+    if(pvbtn) pvbtn.onclick = () => {
+      const el = $('pv-' + i);
+      if(!el) return;
+      const show = el.style.display !== 'block';
+      el.style.display = show ? 'block' : 'none';
+      if(show && !el.dataset.filled){ el.innerHTML = renderMdPreview($('md-' + i).value || b.markdown || '', imgUrls()); el.dataset.filled = '1'; }
+      pvbtn.textContent = show ? '收起预览' : '预览';
+    };
+    const md = $('md-' + i);
+    if(md) md.addEventListener('input', () => {
+      b.markdown = md.value;
+      saveDrafts();      // 正文是最不能丢的东西，改一个字就安排一次保存
+      /* base64 别在这里算：一本 1MB 的书每敲一个键就要重新编码整篇正文（实测 15ms），
+         而它只在真正上传那一刻才用得上。改成"标记为失效，上传时再算"。 */
+      b.base64 = null;
+      const pv = $('pv-' + i);
+      if(pv && pv.style.display === 'block') pv.dataset.pending = '1';
+      clearTimeout(b._ckTimer);
+      b._ckTimer = setTimeout(() => {
+        b.check = validateMarkdown(b.markdown, imageNameSet(b.images));
+        /* 自检结果变了只刷这一行，绝不能 render() 整表 ——
+           render() 会重建整个列表，正在打字的 textarea 被销毁重建，光标直接跳走。 */
+        refreshRow(i);
+        if(pv && pv.style.display === 'block' && pv.dataset.pending){
+          pv.innerHTML = renderMdPreview(md.value, imgUrls());
+          pv.dataset.pending = ''; pv.dataset.filled = '1';
+        }
+      }, 400);
+    });
+    bindCheckPanel(i);
+  });
+
+  updateButtonsAndSummary();
+  refreshFolderWarnings();
+  saveDrafts();          // 任何状态变化都记一笔（防抖，打字时不会每个键都写）
+}
+
+/** 轻量 Markdown → HTML（仅用于本地预览）
+ *
+ *  urlMap：md 里的图片路径 → 本地可直接显示的地址。
+ *  没有它，预览里的 <img src="images/xxx.jpg"> 会去页面所在目录找文件 ——
+ *  那儿压根没有这些图，于是整本书的配图全裂。这是"想先看看效果"看不成的根本原因。
+ */
+function renderMdPreview(md, urlMap){
+  if(!md || !md.trim()) return '<span style="color:#8b949e">（无内容）</span>';
+  const safeUrl = u => {
+    const t = String(u).trim().replace(/[\u0000-]/g, '');
+    if(/^(https?:|mailto:|tel:)/i.test(t)) return t;
+    if(/^[#/]/.test(t) || !/^[a-z][a-z0-9+.-]*:/i.test(t)) return t;
+    return '#';
+  };
+  /* 预览要和 GitHub 一样严格：`**绝对优 **`、`** 绝对优**` 这类内侧贴空格的写法
+     CommonMark 认作"没闭合"，星号会原样印出来。预览如果照正则无脑加粗，
+     就会出现「本地是粗体、上传后是星号」的分裂 —— 用户没法在本地自查。 */
+  const tight = s => !/^\s|\s$/.test(s);
+  const inline = s => escapeHtml(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*\*([^*]+)\*\*\*/g, (m, c) => tight(c) ? `<strong><em>${c}</em></strong>` : m)
+    .replace(/\*\*([^*]+)\*\*/g, (m, c) => tight(c) ? `<strong>${c}</strong>` : m)
+    .replace(/(^|[^*])\*([^*]+)\*/g, (m, p, c) => tight(c) ? p + `<em>${c}</em>` : m)
+    .replace(/~~([^~]+)~~/g, (m, c) => tight(c) ? `<del>${c}</del>` : m)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m,a,u)=>{
+      let src = safeUrl(u);
+      if(urlMap){
+        let key = u;
+        try{ key = decodeURIComponent(u); }catch(e){}
+        const hit = urlMap.get(key) || urlMap.get(u);
+        if(hit) src = hit;
+      }
+      return `<img src="${src}" alt="${a}" style="max-width:100%">`;
+    })
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m,t,u)=>`<a href="${safeUrl(u)}" target="_blank" rel="noopener noreferrer">${t}</a>`);
+  const out = [];
+  const lines = String(md).split('\n');
+  let inCode = false, codeBuf = [], inList = false, inQuote = false, inTable = false;
+  const closeList = () => { if(inList){ out.push('</ul>'); inList = false; } };
+  const closeQuote = () => { if(inQuote){ out.push('</blockquote>'); inQuote = false; } };
+  const closeTable = () => { if(inTable){ out.push('</tbody></table>'); inTable = false; } };
+  const closeAll = () => { closeList(); closeQuote(); closeTable(); };
+  for(let i = 0; i < lines.length; i++){
+    let l = lines[i];
+    if(/^\s*```/.test(l)){
+      if(inCode){ out.push('<pre><code>' + escapeHtml(codeBuf.join('\n')) + '</code></pre>'); codeBuf = []; inCode = false; }
+      else { closeAll(); inCode = true; }
+      continue;
+    }
+    if(inCode){ codeBuf.push(l); continue; }
+    if(/^\s*\|/.test(l)){
+      const cells = l.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g,'|'));
+      if(/^[\s:|-]+$/.test(l)){
+        if(!inTable){ continue; }
+        out.push(cells.map(() => '<th style="text-align:left">' + inline('') + '</th>').join('').replace(/<th[^>]*><\/th>/g,'<th></th>'));
+        continue;
+      }
+      if(!inTable){ closeAll(); out.push('<table><thead><tr>'); inTable = true; }
+      else if(out[out.length-1] && out[out.length-1].includes('</thead>')){}
+      if(inTable && out[out.length-1] === '' || (out.length && out[out.length-1].startsWith('<thead'))){
+        // 已在 thead 里
+      }
+      if(inTable && !out.some(x => x === '</thead>')){
+        out.push('<tr>' + cells.map(c => '<th>' + inline(c) + '</th>').join('') + '</tr></thead><tbody>');
+      }else{
+        out.push('<tr>' + cells.map(c => '<td>' + inline(c) + '</td>').join('') + '</tr>');
+      }
+      continue;
+    }
+    closeTable();
+    if(!l.trim()){ closeAll(); continue; }
+    let m;
+    if(m = l.match(/^(#{1,6})\s+(.+)$/)){ closeAll(); out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); continue; }
+    if(m = l.match(/^\s*[-*]\s+(.+)$/)){
+      closeQuote();
+      if(!inList){ closeTable(); out.push('<ul>'); inList = true; }
+      out.push('<li>' + inline(m[1]) + '</li>');
+      continue;
+    }
+    if(m = l.match(/^\s*(\d+)\.\s+(.+)$/)){
+      closeQuote();
+      if(!inList){ closeTable(); out.push('<ol>'); inList = true; }
+      out.push('<li>' + inline(m[2]) + '</li>');
+      continue;
+    }
+    if(m = l.match(/^\s*>\s?(.*)$/)){
+      closeList(); closeTable();
+      if(!inQuote){ out.push('<blockquote>'); inQuote = true; }
+      out.push('<p>' + inline(m[1]) + '</p>');
+      continue;
+    }
+    if(/^\s*---+/.test(l)){ closeAll(); out.push('<hr>'); continue; }
+    closeAll();
+    out.push('<p>' + inline(l) + '</p>');
+  }
+  if(inCode && codeBuf.length) out.push('<pre><code>' + escapeHtml(codeBuf.join('\n')) + '</code></pre>');
+  closeAll();
+  if(inTable) out.push('</tbody></table>');
+  return out.join('\n');
+}
+
+/* =========================================================================
+   12. 转换与上传流程
+   ========================================================================= */
+function addFiles(files){
+  let added = 0;
+  for(const f of files){
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    if(!['pdf','epub'].includes(ext)){ log(`已忽略不支持的文件：${f.name}`, 'warn'); continue; }
+    const isPdf = ext === 'pdf';
+    books.push({
+      id: newBookId(),
+      file: f, name: f.name, size: f.size,
+      kind: isPdf ? 'pdf' : 'epub',
+      folder: safeFolder(f.name.replace(/\.[^.]+$/,'')),
+      state: isPdf ? 'loading' : 'pending',
+      stateLabel: isPdf ? '读取中' : '待转换',
+      markdown: '', images: [], base64: null, origB64: null, edited: false,
+      keepOrig: $('keepOrigAll') ? $('keepOrigAll').checked : false,
+      skipExisting, check: null,
+      _binDirty: true          // 原文件和配图都是新的，要写进草稿
+    });
+    added++;
+    if(isPdf){
+      const b = books[books.length-1];
+      const fr = new FileReader();
+      fr.onload = () => { b.base64 = String(fr.result).split(',')[1] || ''; b.state = 'ready'; b.stateLabel = '已就绪'; render(); };
+      fr.onerror = () => { b.state='err'; b.stateLabel='读取失败'; render(); };
+      fr.readAsDataURL(f);
+    }
+  }
+  if(added) log(`已加入 ${added} 个文件`, 'info');
+  render();
+  if(added) saveDrafts();
+  if(autoConvert && added && books.some(b => b.kind === 'epub' && b.state === 'pending')){
+    setTimeout(() => convertAll(), 60);
+  }
+}
+
+async function convertBook(i){
+  const b = books[i];
+  b.state = 'converting'; b.stateLabel = '转换中';
+  render();
+  if(!b.inBatch) progStart(`转换中：${escapeHtml(b.name)}`, 0, 100);
+  try{
+    const buf = await b.file.arrayBuffer();
+    const r = await epubToMarkdown(buf);
+    releaseImgUrls(b);            // 旧图换掉了，旧预览链接必须释放，否则内存只涨不降
+    b.markdown = r.markdown;
+    b.images = r.images;
+    b.cover = r.cover || null;
+    b.meta = r.meta || {};
+    b.base64 = bytesToBase64(enc.encode(r.markdown));
+    b.edited = false;
+    /* 原件 base64 只在"保留 EPUB 原件"时才用得上，以前却无条件就算：
+       实测 20MB → 157ms、常驻 53MB（base64 在 JS 里按 UTF-16 存，约为原体积的 2.6 倍），
+       90MB 的书就是约 700ms + 约 240MB 内存 —— 而默认根本不会上传它。
+       改成"真要上传时才算"，同时不再多复制一份 Uint8Array。 */
+    b.origB64 = null;
+    b.state = 'ready';
+    b.stateLabel = '已就绪';
+    b._binDirty = true;                 // 配图换了一整套，草稿里的二进制要重写
+    b.check = validateMarkdown(r.markdown, imageNameSet(r.images));
+    if(b.check.errorCount){
+      b.stateLabel = '有错误';
+      log(`✗ [${b.name}] 自检发现 ${b.check.errorCount} 个错误：`, 'err');
+      b.check.issues.filter(x => x.level === 'err').forEach(x => log(`    ${x.msg}`, 'err'));
+      $('logBox').open = true;
+    }else if(b.check.warnCount){
+      log(`✔ [${b.name}] 转换完成：${r.markdown.length} 字符，${r.images.length} 张图`, 'ok');
+      log(`⚠ [${b.name}] 自检通过，有 ${b.check.warnCount} 处提醒`, 'warn');
+    }else{
+      log(`✔ [${b.name}] 转换完成：${r.markdown.length} 字符，${r.images.length} 张图，自检全部通过`, 'ok');
+    }
+    if(!b.inBatch) progEnd(`转换完成：${r.markdown.length} 字符 · ${r.images.length} 张图`, b.check.errorCount === 0);
+  }catch(e){
+    b.state = 'err'; b.stateLabel = '转换失败';
+    log(`✗ [${b.name}] 转换失败：${e.message}`, 'err');
+    $('logBox').open = true;
+    if(!b.inBatch) progEnd('转换失败：' + (e.friendly || e.message), false);
+  }
+  render();
+}
+
+async function convertAll(){
+  if(busy){ log('已有任务在进行中，请稍候', 'warn'); return; }
+  const queue = books.map((b, i) => ({ b, i })).filter(({ b }) => b.kind === 'epub' && b.state === 'pending');
+  const total = queue.length;
+  if(!total){ log('没有待转换的书（PDF 无需转换）', 'warn'); return; }
+
+  busy = true;
+  const btn = $('convertAll');
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '转换中…';
+  progStart('准备转换…', 0, 100);
+  let ok = 0, fail = 0, warn = 0;
+  try{
+    for(let k = 0; k < queue.length; k++){
+      const { b, i } = queue[k];
+      progState.base = (k / total) * 100;
+      progState.span = 100 / total;
+      progState.text = `转换中 <b>${k + 1}</b> / ${total}（${escapeHtml(b.name)}）`;
+      progSet(0, progState.text);
+      b.inBatch = true;
+      try{
+        await convertBook(i);
+        if(b.state === 'err') fail++;
+        else if(b.check && b.check.errorCount){ ok++; warn++; }
+        else ok++;
+      }catch(e){ fail++; }
+      finally{ b.inBatch = false; }
+      render();
+    }
+    const msg = fail ? `转换完成：成功 ${ok} 本，失败 ${fail} 本`
+      : (warn ? `转换完成：${ok} 本（其中 ${warn} 本自检有错误）`
+              : `全部转换完成：${ok} 本`);
+    progEnd(msg, fail === 0);
+    if(warn) $('logBox').open = true;
+  }catch(e){
+    progEnd('转换中断：' + (e.friendly || e.message), false);
+  }finally{
+    busy = false;
+    btn.disabled = false; btn.textContent = oldText;
+    render();
+  }
+}
+
+async function doUpload(i){
+  const b = books[i];
+  if(b.uploading) return;
+  if(busy && !b.inBatch){ log(`⚠ 已有上传任务在进行中，「${b.name}」已排队等待`, 'warn'); return; }
+  /* 两本书撞同一个文件夹名：后传的会静默覆盖先传的，README 里最后只剩一本。
+     这种丢书没有报错、没有提示，只能靠人盯着发现 —— 所以直接拦下来。 */
+  if(blockIfDupFolder(i)) return;
+  if(b.kind === 'epub'){
+    b.check = validateMarkdown(b.markdown || '', imageNameSet(b.images));
+    if(b.check.errorCount){
+      render();
+      log(`✗ [${b.name}] 自检发现 ${b.check.errorCount} 个错误，已阻止上传：`, 'err');
+      b.check.issues.filter(x => x.level === 'err').forEach(x => log(`    ${x.msg}`, 'err'));
+      $('logBox').open = true;
+      return;
+    }
+  }
+  b.uploading = true;
+  b.stateLabel = '上传中';
+  render();
+  if(!b.inBatch) progStart(`上传中：${escapeHtml(b.name)}`, 0, 100);
+
+  const fi = $('folder-' + i); if(fi) b.folder = fi.value;
+  const ta = $('md-' + i);
+  // 只有 textarea 里确实有内容才采纳它。
+  // 收起的行 textarea 是空的（为省 DOM 开销没灌正文），绝不能拿空值覆盖 b.markdown。
+  if(ta && ta.value){
+    if(ta.value !== b.markdown){ b.markdown = ta.value; b.edited = true; }
+    b.base64 = bytesToBase64(enc.encode(b.markdown));
+  }else if(!b.base64 && b.kind === 'epub'){
+    // 兜底：内存里还有正文就重新编码
+    b.base64 = bytesToBase64(enc.encode(b.markdown || ''));
+  }
+
+  try{
+    const r = await uploadBook(b);
+    b.lastResult = r;
+    /* 0 个文件提交 ≠ 成功上传。以前两种都写"已上传"，
+       用户去 GitHub 一看没变化，只能怀疑是工具坏了 —— 其实常常是"内容确实没变，不需要提交"。 */
+    if(r.failed > 0 && r.uploaded === 0){ b.state = 'err'; b.stateLabel = '上传失败'; }
+    else if(r.failed > 0){ b.state = 'done'; b.stateLabel = '部分成功（' + r.failed + ' 个没传上）'; }
+    else if(r.uploaded === 0 && r.held > 0){ b.state = 'done'; b.noChange = true; b.stateLabel = '被设置挡住'; }
+    else if(r.uploaded === 0){ b.state = 'done'; b.noChange = true; b.stateLabel = '无变化（已是最新）'; }
+    else { b.state = 'done'; b.noChange = false; b.stateLabel = '已上传'; }
+  }catch(e){
+    b.state = 'err'; b.stateLabel = '上传失败';
+    log(`✗ [${b.name}] 上传失败：${e.friendly || e.message}`, 'err');
+    $('logBox').open = true;
+  }
+  /* 有文件没传上时必须把日志摊开 —— 否则界面只剩一句"部分成功"，
+     用户既不知道是哪几个文件、也不知道为什么，等于没说。 */
+  if(b.lastResult && b.lastResult.failed > 0){
+    log(`  ⚠ [${b.name}] 有 ${b.lastResult.failed} 个文件没进仓库，往上翻找 [失败] 开头的行`, 'warn');
+    $('logBox').open = true;
+  }
+  b.uploading = false;
+  if(!b.inBatch){
+    if(b.noChange){
+      progEnd(`没有提交任何文件：${escapeHtml(b.name)}（${escapeHtml(b.stateLabel)}）`, false);
+    }else{
+      const okAll = b.state === 'done' && b.stateLabel === '已上传';
+      progEnd(okAll ? `已上传：${escapeHtml(b.name)}` : `上传完成但有问题：${escapeHtml(b.stateLabel)}`, okAll);
+    }
+  }
+  render();
+}
+
+/**
+ * 给仓库里没有封面的书补一张文字封面。
+ *
+ * 已经传过的 PDF / .md 书，仓库里只有 xxx.pdf / xxx.md，没有 cover.*，
+ * 首页那一格就只能写「无封面」。这里一次性补齐，省得一本本重传。
+ * 用一次 commit 提交所有生成的封面。
+ */
+async function fillMissingCovers(token, info){
+  const files = await listAllFiles(token, info);
+  const dirs = new Map();
+  for(const f of files){
+    const i = f.path.indexOf('/');
+    if(i < 0) continue;
+    const dir = f.path.slice(0, i);
+    if(dir === 'images' || dir === '.github') continue;
+    const rest = f.path.slice(i + 1);
+    if(!dirs.has(dir)) dirs.set(dir, { cover: false, kind: 'md' });
+    const rec = dirs.get(dir);
+    const bn = baseName(f.path);
+    if(/^cover\.(jpe?g|png|webp|gif|svg)$/i.test(bn) && !rest.includes('/')) rec.cover = true;
+    else if(/\.pdf$/i.test(bn) && bn === dir + '.pdf') rec.kind = 'pdf';
+    else if(/\.epub$/i.test(bn) && bn === dir + '.epub') rec.kind = 'epub';
+  }
+
+  // 书名优先取索引里的真名，没有就用目录名
+  let libIndex = {};
+  try{
+    const idxFile = files.find(x => x.path === 'books.json');
+    const txt = await readRepoText(token, info, 'books.json', idxFile ? idxFile.sha : '');
+    if(txt) libIndex = JSON.parse(txt) || {};
+  }catch(e){}
+
+  const todo = [];
+  for(const [dir, rec] of dirs){
+    if(rec.cover) continue;
+    const title = String((libIndex[dir] || {}).title || '').trim() || dir;
+    todo.push({ dir, kind: rec.kind, bytes: enc.encode(makeTextCover(title, rec.kind)) });
+  }
+  if(!todo.length) return 0;
+
+  const base = `https://api.github.com/repos/${info.full}/git`;
+  await serialize(() => withRetry(async () => {
+    const parentSha = await readHeadRef(token, base, info);
+    const tree = [];
+    for(const t of todo){
+      const blob = await gh(token, base + '/blobs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: bytesToBase64(t.bytes), encoding: 'base64' })
+      });
+      tree.push({ path: `${t.dir}/cover.svg`, mode: '100644', type: 'blob', sha: blob.sha });
+    }
+    const tr = await gh(token, base + '/trees', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base_tree: parentSha, tree })
+    });
+    const commit = await gh(token, base + '/commits', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: `add text covers for ${todo.length} book(s)`, tree: tr.sha, parents: [parentSha] })
+    });
+    await gh(token, `${base}/refs/heads/${encodeURIComponent(info.default_branch)}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sha: commit.sha, force: false })
+    });
+  }, { tries: 4, label: '补封面' }));
+
+  return todo.length;
+}
+
+/* =========================================================================
+   10.5 仓库里已有的书：改名 / 删除
+   =========================================================================
+   以前这个工具只会往仓库里"加"，传错了想撤掉只能上 GitHub 网页一页页删，
+   或者本地改个文件夹名重传一本（旧的还留在仓库里占位）。
+   删除和改名都只动 tree，不动 blob 内容：
+     · 删除 = 那几个 path 在 tree 里把 sha 写成 null
+     · 改名 = 把同一批 blob 的 sha 挂到新 path 上，再把旧 path 删掉
+   所以整本书的改名是一个 commit、零字节上传 —— 300 张图的书也不需要重传。 */
+
+/** 顶层目录 = 一本书。"images"、".github" 是公共目录，不算书。 */
+function groupRepoBooks(files){
+  const map = new Map();
+  for(const f of files){
+    const i = f.path.indexOf('/');
+    if(i < 0) continue;
+    const dir = f.path.slice(0, i);
+    if(dir === 'images' || dir === '.github') continue;
+    if(!map.has(dir)) map.set(dir, { dir, files: [], kb: 0, md: false, pdf: false, epub: false, cover: null, images: 0 });
+    const rec = map.get(dir);
+    rec.files.push(f);
+    rec.kb += f.size || 0;
+    const rest = f.path.slice(i + 1), bn = baseName(f.path);
+    if(/\.md$/i.test(bn) && bn === dir + '.md') rec.md = true;
+    else if(/\.pdf$/i.test(bn) && bn === dir + '.pdf') rec.pdf = true;
+    else if(/\.epub$/i.test(bn) && bn === dir + '.epub') rec.epub = true;
+    else if(/^cover\.(jpe?g|png|webp|gif|svg)$/i.test(bn) && !rest.includes('/')) rec.cover = bn;
+    else if(rest.startsWith('images/')) rec.images++;
+  }
+  return [...map.values()].sort((a, b) => a.dir.localeCompare(b.dir, 'zh'));
+}
+
+async function readBooksJson(token, info, files){
+  const hit = (files || []).find(x => x.path === 'books.json');
+  let idx = {};
+  try{
+    const txt = await readRepoText(token, info, 'books.json', hit ? hit.sha : '');
+    if(txt) idx = JSON.parse(txt) || {};
+  }catch(e){ /* 没有索引或不是合法 JSON：按"没有"处理 */ }
+  return idx;
+}
+
+/**
+ * 改名的路径映射：old/old.md → new/new.md。
+ * 主文件（.md / .epub / .pdf 那个同名文件）跟着书名走，
+ * 其余（cover.*、images/...）保持原样搬过去。
+ */
+function renamedPath(path, oldDir, newDir){
+  const seg = path.slice(oldDir.length + 1).split('/');
+  const bn = seg[seg.length - 1];
+  const m = /^(.*?)(\.[^.]+)$/.exec(bn);
+  if(m && (m[1] === oldDir || m[1] === safeFolder(oldDir))) seg[seg.length - 1] = newDir + m[2];
+  return newDir + '/' + seg.join('/');
+}
+
+function booksJsonEntries(idx){
+  const bytes = enc.encode(JSON.stringify(idx, null, 2) + '\n');
+  return [{ path: 'books.json', b64: bytesToBase64(bytes) }];
+}
+
+/** 删掉仓库里的一整本书（含 books.json 里的条目），然后重建首页 */
+async function deleteRepoBook(token, info, dir){
+  const files = await listAllFiles(token, info);
+  const mine = files.filter(f => f.path === dir || f.path.startsWith(dir + '/'));
+  if(!mine.length) throw new Error(`仓库里没有「${dir}」这本书（也可能已经删过了）`);
+  const idx = await readBooksJson(token, info, files);
+  const adds = [];
+  if(idx[dir]){
+    const next = {};
+    for(const k of Object.keys(idx)) if(k !== dir) next[k] = idx[k];
+    adds.push(...booksJsonEntries(next));
+  }
+  const r = await commitFilesBatch(token, info, adds, `remove ${dir}（${mine.length} 个文件）`,
+                                  { dels: mine.map(f => f.path) });
+  return { files: mine.length, idx: adds.length ? 1 : 0, commit: r };
+}
+
+/** 给仓库里的一本书改文件夹名；blob 复用，一个字节都不用重传 */
+async function renameRepoBook(token, info, oldDir, newDirRaw){
+  const newDir = safeFolder(newDirRaw);
+  if(!newDir || newDir === 'book') throw new Error('新名字不能用（只能是中英文、数字、- _ . 的组合）');
+  if(newDir === oldDir) throw new Error('新名字和现在的一样');
+  const files = await listAllFiles(token, info);
+  const mine = files.filter(f => f.path === oldDir || f.path.startsWith(oldDir + '/'));
+  if(!mine.length) throw new Error(`仓库里没有「${oldDir}」这本书`);
+  if(files.some(f => f.path === newDir || f.path.startsWith(newDir + '/')))
+    throw new Error(`仓库里已经有「${newDir}」了，换一个名字`);
+
+  const refs = mine.map(f => ({ path: renamedPath(f.path, oldDir, newDir), sha: f.sha }));
+  const dels = mine.map(f => f.path);
+  const idx = await readBooksJson(token, info, files);
+  const adds = [];
+  if(idx[oldDir]){
+    const next = {};
+    for(const k of Object.keys(idx)) next[k === oldDir ? newDir : k] = idx[k];
+    const rec = Object.assign({}, idx[oldDir]);
+    if(!rec.title || rec.title === oldDir) rec.title = newDir;
+    next[newDir] = rec;
+    adds.push(...booksJsonEntries(next));
+  }
+  const r = await commitFilesBatch(token, info, adds, `rename ${oldDir} → ${newDir}`,
+                                  { refs, dels });
+  return { files: mine.length, idx: adds.length ? 1 : 0, commit: r };
+}
+
+/** 操作完顺手重建首页，否则 README 里还挂着已经删掉/改名的书 */
+async function refreshReadmeAfter(token, info, what){
+  try{
+    const r = await updateReadme(token, info);
+    log(`  [更新] README.md：${r.entries} 个条目，commit ${String(r.commit).slice(0, 7)}`, 'ok');
+  }catch(e){
+    log(`  [提示] ${what} 成功，但 README 重建失败（不影响仓库内容）：${e.friendly || e.message}`, 'warn');
+  }
+}
+
+/* ---------- 面板 ---------- */
+let repoBooks = [];
+
+async function loadRepoBooks(){
+  const token = $('token').value.trim(), repo = $('repo').value.trim();
+  const tip = $('rpTip'), list = $('rpList');
+  $('repoPanel').style.display = '';
+  if(!token || !repo){ tip.textContent = '先填 Token 和仓库名'; list.innerHTML = ''; return; }
+  tip.textContent = '读取中…';
+  list.innerHTML = '<div class="rp-tip">正在读取仓库文件列表…</div>';
+  try{
+    const info = await repoInfo(token, repo);
+    sharedRepoInfo = Object.assign(info, { key: repo.trim() });
+    $('repoDot').classList.add('on');
+    const files = await listAllFiles(token, info);
+    repoBooks = groupRepoBooks(files);
+    tip.textContent = `${repoBooks.length} 本 · 共 ${files.length} 个文件`;
+    renderRepoBooks();
+  }catch(e){
+    tip.textContent = '读取失败';
+    list.innerHTML = `<div class="rp-tip">读取失败：${escapeHtml(e.friendly || e.message)}</div>`;
+    log(`✗ 读取仓库书籍失败：${e.friendly || e.message}`, 'err');
+  }
+}
+
+function renderRepoBooks(){
+  const list = $('rpList');
+  if(!repoBooks.length){
+    list.innerHTML = '<div class="rp-tip">仓库里还没有书。上传一本之后这里就能改名、删除。</div>';
+    return;
+  }
+  list.innerHTML = repoBooks.map((bk, i) => {
+    const bits = [];
+    if(bk.md) bits.push('Markdown');
+    if(bk.pdf) bits.push('PDF');
+    if(bk.epub) bits.push('EPUB 原件');
+    if(bk.images) bits.push(`${bk.images} 图`);
+    if(bk.cover) bits.push('有封面');
+    return `<div class="rp-row" id="rpb-${i}">
+      <span class="rp-name" title="${escapeHtml(bk.dir)}">${escapeHtml(bk.dir)}</span>
+      <span class="rp-meta">${bits.join(' · ')}${bk.kb ? ' · ' + fmtSize(bk.kb * 1) : ''} · ${bk.files.length} 个文件</span>
+      <input type="text" id="rpn-${i}" value="${escapeHtml(bk.dir)}" placeholder="新的文件夹名" />
+      <button class="sm" id="rpok-${i}">改名</button>
+      <button class="sm danger" id="rpd-${i}">删除</button>
+    </div>`;
+  }).join('');
+  repoBooks.forEach((bk, i) => {
+    $('rpok-' + i).onclick = () => repoRename(i);
+    $('rpd-' + i).onclick = () => repoDelete(i);
+  });
+}
+
+async function repoRename(i){
+  const bk = repoBooks[i];
+  const el = $('rpn-' + i);
+  const to = safeFolder(el ? el.value : '');
+  if(busy) return;
+  if(to === bk.dir){ log('新名字和现在的一样，没有改动', 'warn'); return; }
+  const token = $('token').value.trim(), repo = $('repo').value.trim();
+  if(!token || !repo) return alert('请先填写 Token 和仓库名');
+  busy = true; render();
+  progStart(`改名：${bk.dir} → ${to}`, 0, 100);
+  try{
+    const info = await repoInfo(token, repo);
+    const r = await renameRepoBook(token, info, bk.dir, to);
+    progEnd(`已改名：${bk.dir} → ${to}（${r.files} 个文件，0 字节重传）`, true);
+    log(`✔ 已把「${bk.dir}」改名为「${to}」：${r.files} 个文件，blob 直接复用，没有重传任何内容`, 'ok');
+    await refreshReadmeAfter(token, info, '改名');
+    bk.dir = to;
+    el.value = to;
+    await loadRepoBooks();
+  }catch(e){
+    progEnd('改名失败：' + (e.friendly || e.message), false);
+    log(`✗ 改名失败：${e.friendly || e.message}`, 'err');
+    $('logBox').open = true;
+  }finally{
+    busy = false; render();
+  }
+}
+
+async function repoDelete(i){
+  const bk = repoBooks[i];
+  if(busy) return;
+  if(!confirm(`确定从仓库里删除「${bk.dir}」吗？\n\n${bk.files.length} 个文件会被删掉（含配图和封面），GitHub 上就找不回来了。\n只删仓库里的文件，不动你电脑上的原件。`)) return;
+  const token = $('token').value.trim(), repo = $('repo').value.trim();
+  if(!token || !repo) return alert('请先填写 Token 和仓库名');
+  busy = true; render();
+  progStart(`删除：${bk.dir}`, 0, 100);
+  try{
+    const info = await repoInfo(token, repo);
+    const r = await deleteRepoBook(token, info, bk.dir);
+    progEnd(`已删除：${bk.dir}（${r.files} 个文件）`, true);
+    log(`✔ 已从仓库删除「${bk.dir}」：${r.files} 个文件${r.idx ? '，books.json 里那条也去掉了' : ''}`, 'ok');
+    await refreshReadmeAfter(token, info, '删除');
+    await loadRepoBooks();
+  }catch(e){
+    progEnd('删除失败：' + (e.friendly || e.message), false);
+    log(`✗ 删除失败：${e.friendly || e.message}`, 'err');
+    $('logBox').open = true;
+  }finally{
+    busy = false; render();
+  }
+}
+
+/**
+ * 书籍目录页：写进 `<书名>/README.md`。
+ *
+ * 为什么值得多这一个文件：在 GitHub 上点进 `书名/` 这个目录，看到的是一份
+ * 文件列表 —— 封面缩略图、元信息、下载入口全都没有，只有一堆文件名。
+ * 有了这份 README，GitHub 会自动把它渲染在目录列表下面，
+ * 于是每本书的目录页就是一张封面 + 书名作者 + 下载链接，像个正经书架。
+ * 顶部还留了回首页的入口，不用一路点浏览器后退。
+ */
+function bookPageMd(b, folder, coverName, today){
+  const meta = b.meta || {};
+  const title = String(meta.title || folder).trim() || folder;
+  const L = ['<div align="center">', '', '# ' + title, ''];
+  if(coverName) L.push('<img src="' + coverName + '" width="180" alt="' +
+                   title.replace(/[\[\]|"]/g, ' ').trim() + '">', '');
+  const sub = [];
+  if(meta.creator) sub.push(meta.creator);
+  if(meta.publisher) sub.push(meta.publisher);
+  if(sub.length) L.push('<sub>' + sub.join(' · ') + '</sub>', '');
+  L.push('</div>', '', '---', '');
+
+  const bits = [];
+  if((b.markdown || '').length) bits.push('正文约 ' + fmtChars((b.markdown || '').length));
+  if((b.images || []).length) bits.push((b.images || []).length + ' 张配图');
+  if(meta.language) bits.push('语言 ' + meta.language);
+  if(today) bits.push('上传于 ' + today);
+  if(bits.length) L.push(bits.join(' · '), '');
+
+  L.push('## 阅读与下载', '');
+  if(b.kind === 'pdf'){
+    L.push('- [查看 PDF](' + folder + '.pdf)');
+  }else{
+    L.push('- [在线阅读](' + folder + '.md)');
+    if(b.keepOrig) L.push('- [下载 EPUB 原件](' + folder + '.epub)');
+  }
+  L.push('', '---', '', '[← 返回书库首页](../README.md)');
+  return L.join('\n') + '\n';
+}
+
+/** 仓库级的配套文件。
+ *  资源文件（封面、配图、原件）一律标记为 vendored：不进语言统计、diff 里折叠。 */
+function gitattributesText(){
+  return [
+    '# 由 book2md 自动维护 —— 可改，下次重建首页时会补回来',
+    '# 封面：自动生成的文字封面，不进语言统计',
+    'cover.svg linguist-generated',
+    '# 资源文件：二进制内容，不进语言统计，也不刷 diff',
+    '*.jpg binary linguist-vendored',
+    '*.jpeg binary linguist-vendored',
+    '*.png binary linguist-vendored',
+    '*.gif binary linguist-vendored',
+    '*.webp binary linguist-vendored',
+    '*.svg binary linguist-vendored',
+    '*.epub binary linguist-vendored',
+    '*.pdf binary linguist-vendored',
+    '*.mobi binary linguist-vendored',
+    '*.azw3 binary linguist-vendored',
+    '*.djvu binary linguist-vendored',
+    ''
+  ].join('\n');
+}
+
+/**
+ * 只重建首页，不碰书。
+ * 用来单独验证"仓库里到底有什么、封面认出几个"——否则每次都得重传一本书才触发重建。
+ * 顺手给没有封面的书补文字封面（只新增 cover.svg，不动任何书籍文件）。
+ */
+async function rebuildReadme(){
+  if(busy) return;
+  const token = $('token').value.trim(), repo = $('repo').value.trim();
+  if(!token || !repo) return log('先填 GitHub Token 和仓库名', 'warn');
+  busy = true; render();
+  progStart('重建首页…', 0, 100);
+  try{
+    const info = await repoInfo(token, repo);
+    sharedRepoInfo = Object.assign(info, { key: repo.trim() });
+    $('repoDot').classList.add('on');
+    let filled = 0;
+    try{
+      filled = await fillMissingCovers(token, info);
+      if(filled) log(`  ✔ 为 ${filled} 本没有封面的书生成了文字封面`, 'ok');
+    }catch(e){
+      log(`  [提示] 补封面失败（不影响首页）：${e.friendly || e.message}`, 'warn');
+    }
+    const r = await updateReadme(token, info);
+    progEnd('首页已重建');
+    log(`✔ 首页已重建：${r.entries} 个条目 · ${fmtSize(r.bytes)} · commit ${String(r.commit).slice(0, 7)}`, 'ok');
+    log(`  https://github.com/${info.full}/commit/${r.commit}`, 'info');
+    log('  刷新仓库首页就能看到新的「最近更新」时间', 'info');
+  }catch(e){
+    progEnd('重建失败', false);
+    log(`✗ 重建首页失败：${e.friendly || e.message}`, 'err');
+    $('logBox').open = true;
+  }finally{
+    busy = false; render();
+  }
+}
+
+async function uploadAll(){
+  if(busy){ log('已有任务在进行中，请稍候', 'warn'); return; }
+  const token = $('token').value.trim(), repo = $('repo').value.trim();
+  if(!token) return alert('请先填写 GitHub Token');
+  if(!repo) return alert('请先填写仓库名');
+  try{
+    const me = await gh(token, 'https://api.github.com/user');
+    $('repoDot').classList.add('on');
+    log(`Token 有效，当前账号：${me.login}`, 'ok');
+  }catch(e){
+    log(`✗ Token 校验失败：${e.friendly || e.message}`, 'err');
+    $('logBox').open = true;
+    return;
+  }
+
+  const queue = books.map((b, i) => ({ b, i })).filter(({ b }) => b.state === 'ready');
+  const total = queue.length;
+  if(!total){ log('没有已就绪的书', 'warn'); return; }
+
+  /* 批量前统一查一遍重名：这是"丢书"最隐蔽的一种 ——
+     不报错、不失败，只是后一本把前一本盖掉，README 里最后只剩一本。
+     与其传完才发现，不如传之前拦住。 */
+  refreshFolderWarnings();
+  const clashes = [...dupFolders().entries()].filter(([, idx]) => idx.length > 1);
+  if(clashes.length){
+    log('✗ 有书用了同一个仓库文件夹，已阻止批量上传：', 'err');
+    clashes.forEach(([f, idx]) =>
+      log(`    「${f}」 ← ${idx.map(k => books[k].name).join('、')}`, 'err'));
+    log('    同名会互相覆盖，请把其中一本的文件夹名改掉再传。', 'err');
+    $('logBox').open = true;
+    return;
+  }
+
+  busy = true;
+  const btn = $('uploadAll');
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '上传中';
+  progStart('准备上传…', 0, 100);
+
+  // 书籍串行上传（不做书籍级并发）。
+  //
+  // 原先多本书并发上传，有两个问题：
+  //  1) 多个 worker 共享同一个 progState.base/span，各自反复改写导致进度乱跳
+  //     （体现是上传到 85% 就归 0）；
+  //  2) 每本书开头都 progSet(0)，视觉上就是“重新上传”。
+  // 而书籍内部的 blob 已经是 12 路并发（大头在那里），
+  // 再叠加书籍级并发不会快什么，只会增加 ref 竞态风险。
+  let doneCount = 0, failedCount = 0;
+  for(let idx = 0; idx < queue.length; idx++){
+    const { b, i } = queue[idx];
+    // 本书占一段：已完成的占前面，当前这本在后面
+    progState.base = (doneCount / total) * 100;
+    progState.span = 100 / total;
+    progState.text = `上传中 <b>${idx + 1}</b> / ${total}（${escapeHtml(b.name)}）`;
+    progSet(0, progState.text);
+    b.inBatch = true;
+    try{
+      await doUpload(i);
+      if(b.state === 'err') failedCount++;
+    }catch(e){
+      failedCount++;
+      log(`✗ [${b.name}] 上传异常：${e.friendly || e.message}`, 'err');
+    }finally{ b.inBatch = false; }
+    doneCount++;
+    // 本书占比到 100%，下一本从这里继续（而不是归 0）
+    progSet(100);
+    render();
+  }
+  /* 逐本给一句结论。书多了以后，通篇日志里翻"这本到底传了没"很费劲，
+     而"一本动了、一本没动"恰好是最容易被误判成故障的现象。 */
+  try{
+    log('── 本次结果 ──', 'info');
+    let moved = 0, still = 0;
+    for(const { b } of queue){
+      const r = b.lastResult || {};
+      if(b.state === 'err'){
+        log(`  ✗ ${b.name}：失败，没进仓库`, 'err');
+      }else if(r.held){
+        log(`  ⚠ ${b.name}：${r.held} 个文件内容和仓库不一样，但被「已存在文件一律不覆盖」挡住了`, 'warn');
+        still++;
+      }else if(!r.uploaded){
+        const md = (r.sameFiles || []).find(p => /\.md$/i.test(p));
+        log(`  ○ ${b.name}：一个文件都没提交 —— 转换结果和仓库里已有的完全一致` +
+            (md ? `（含 ${baseName(md)}）` : ''), 'info');
+        still++;
+      }else{
+        log(`  ✔ ${b.name}：提交 ${r.uploaded} 个文件` +
+            (r.skipped ? `，另有 ${r.skipped} 个未变化` : ''), 'ok');
+        moved++;
+      }
+    }
+    log(`  共 ${queue.length} 本：${moved} 本有更新，${still} 本没有变化`, moved ? 'ok' : 'info');
+    if(still && !moved){
+      log('  提示：这些书的内容确实和仓库里一样，不是上传失败。若你刚改过转换逻辑，' +
+          '请确认是重新拖入文件触发了重新转换，而不是点列表里那条旧记录。', 'warn');
+    }
+    progEnd(failedCount ? `完成：成功 ${total - failedCount} 本，失败 ${failedCount} 本`
+                       : `全部完成：${total} 本，${moved} 本有更新`, failedCount === 0);
+  }catch(e){
+    progEnd('中断：' + (e.friendly || e.message), false);
+  }finally{
+    busy = false;
+    btn.disabled = false; btn.textContent = oldText;
+    render();
+  }
+}
+
+/* =========================================================================
+   12.5 草稿暂存：刷新页面不丢
+   =========================================================================
+   以前刷新一下页面 = 全部重来：书要重新拖进来、重新转换，改过的正文和文件夹名全没。
+   现在把每本书存进 IndexedDB —— 正文、配图字节、自检结果、文件夹名，
+   连原始的 EPUB/PDF 文件对象一起存（File 是可以结构化克隆的），
+   所以刷新后不只是"看得到"，而是能直接重新转换、直接上传。
+
+   一本书拆成两条记录：
+     :meta（正文等文本，几 KB ~ 几 MB）改动频繁，打字时就存；
+     :bin（原文件 + 配图，动辄几十 MB）只在转换完成后存一次。
+   合成一条的话，每敲一个字都要把几十 MB 的配图重新克隆一遍。 */
+
+const DRAFT_DB = 'book2md-drafts';
+const DRAFT_VER = 1;
+let draftDb = null, draftBroken = false, draftBinFail = false;
+
+function openDraftDb(){
+  if(draftDb) return Promise.resolve(draftDb);
+  if(draftBroken) return Promise.resolve(null);
+  return new Promise(resolve => {
+    let req;
+    try{ req = indexedDB.open(DRAFT_DB, DRAFT_VER); }
+    catch(e){ draftBroken = true; return resolve(null); }
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if(!db.objectStoreNames.contains('draft')) db.createObjectStore('draft');
+    };
+    req.onsuccess = () => { draftDb = req.result; resolve(draftDb); };
+    req.onerror = () => { draftBroken = true; resolve(null); };
+  });
+}
+
+function idbTx(mode, fn){
+  return openDraftDb().then(db => {
+    if(!db) throw new Error('no-idb');
+    return new Promise((res, rej) => {
+      const tx = db.transaction('draft', mode);
+      let out;
+      try{ out = fn(tx.objectStore('draft')); }catch(e){ return rej(e); }
+      tx.oncomplete = () => res(out);
+      tx.onerror = tx.onabort = () => rej(tx.error || new Error('idb-fail'));
+    });
+  });
+}
+
+const draftPut = kv => idbTx('readwrite', st => { for(const [k, v] of kv) st.put(v, k); });
+const draftDel = ks => idbTx('readwrite', st => { for(const k of ks) st.delete(k); });
+const draftClear = () => idbTx('readwrite', st => st.clear());
+function draftKeys(){
+  return idbTx('readonly', st => new Promise(res => {
+    const out = [];
+    const rq = st.openCursor();
+    rq.onsuccess = () => { const c = rq.result; if(!c) return res(out); out.push(c.key); c.continue(); };
+    rq.onerror = () => res(out);
+  }));
+}
+function draftReadAll(){
+  return idbTx('readonly', st => {
+    const out = [];
+    return new Promise(res => {
+      const rq = st.openCursor();
+      rq.onsuccess = () => { const c = rq.result; if(!c) return res(out); out.push([c.key, c.value]); c.continue(); };
+      rq.onerror = () => res(out);
+    });
+  });
+}
+
+function newBookId(){
+  return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/** 标记改动并安排一次保存（防抖 900ms：连续打字只存最后一次） */
+let draftTimer = 0;
+let draftTouched = false;      // 本次会话确实写过草稿（没写过就不该去清空别人的存档）
+function saveDrafts(){
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => flushDrafts(), 900);
+}
+
+async function flushDrafts(){
+  /* 一本书都不剩时才清库，而且必须是"这次真的写过"才清 ——
+     否则页面刚打开、草稿还没读回来就先被清掉了。 */
+  if(!books.length){
+    if(draftTouched){ draftTouched = false; try{ await draftClear(); }catch(e){} }
+    return;
+  }
+  draftTouched = true;
+  const now = Date.now();
+  const alive = new Set();
+  for(const b of books){ if(!b.id) b.id = newBookId(); alive.add(b.id); }
+  /* 被移除的那本书的存档必须显式删掉：只 put 不 delete 的话，
+     删掉的书刷新之后又自己回来了，怎么删都删不掉。 */
+  try{
+    const keys = await draftKeys();
+    const dead = keys.filter(k => !alive.has(String(k).replace(/:(meta|bin)$/, '')));
+    if(dead.length) await draftDel(dead);
+  }catch(e){}
+  const kv = [], bin = [], binIds = [];
+  for(const b of books){
+    if(!b.id) b.id = newBookId();
+    kv.push([b.id + ':meta', {
+      name: b.name, kind: b.kind, size: b.size || 0, folder: b.folder || '',
+      state: b.state, stateLabel: b.stateLabel || '',
+      keepOrig: !!b.keepOrig, skipExisting: !!b.skipExisting, edited: !!b.edited,
+      markdown: b.markdown || '', meta: b.meta || {},
+      cover: b.cover && b.cover.bytes ? { name: b.cover.name, bytes: b.cover.bytes } : null,
+      check: b.check || null, savedAt: now
+    }]);
+    /* 二进制只在"内容真的换过"时才重写：转换完成会置 _binDirty，
+       单纯改文件夹名或改正文不该触发几十 MB 的重新克隆。 */
+    if(b._binDirty !== false){ bin.push([b.id + ':bin', { file: b.file || null, images: [...(b.images || [])] }]); binIds.push(b); }
+  }
+  try{
+    await draftPut(kv);
+    for(const b of books) if(binIds.indexOf(b) < 0) b._binDirty = false;
+  }catch(e){
+    if(!draftBroken){ draftBroken = true; log('⚠ 浏览器不允许本地存档（可能用了无痕模式），刷新页面草稿会丢', 'warn'); }
+    return;
+  }
+  if(bin.length){
+    try{ await draftPut(bin); for(const b of binIds) b._binDirty = false; }
+    catch(e){
+      // 配额不够也别把整本书的存档废掉：正文还在，只是原文件和配图存不下
+      if(!draftBinFail){
+        draftBinFail = true;
+        log(`⚠ 配图和原文件太大，本地存不下（${e && e.name || '配额不足'}）：刷新后能恢复正文，但需要重新拖入原文件才能重新转换`, 'warn');
+      }
+    }
+  }
+}
+
+/** 启动时把草稿读回来。返回 true 表示确实恢复了东西。 */
+async function restoreDrafts(){
+  let rows;
+  try{ rows = await draftReadAll(); }
+  catch(e){ return false; }
+  if(!rows || !rows.length) return false;
+  const meta = new Map(), bin = new Map();
+  for(const [k, v] of rows){
+    if(k.endsWith(':meta')) meta.set(k.slice(0, -5), v);
+    else if(k.endsWith(':bin')) bin.set(k.slice(0, -4), v);
+  }
+  const ids = [...meta.keys()].sort((a, c) => (meta.get(a).savedAt || 0) - (meta.get(c).savedAt || 0));
+  let n = 0;
+  for(const id of ids){
+    const m = meta.get(id), bn = bin.get(id) || {};
+    if(!m || !m.name) continue;
+    const b = {
+      id, file: bn.file || null, name: m.name, size: m.size || 0, kind: m.kind || 'epub',
+      folder: m.folder || safeFolder(m.name.replace(/\.[^.]+$/, '')),
+      state: m.state === 'converting' ? 'pending' : (m.state || 'pending'),
+      stateLabel: m.state === 'converting' ? '待转换' : (m.stateLabel || ''),
+      markdown: m.markdown || '', images: bn.images || [], base64: null, origB64: null,
+      edited: !!m.edited, keepOrig: !!m.keepOrig, skipExisting: !!m.skipExisting,
+      meta: m.meta || {}, cover: m.cover || null, check: m.check || null,
+      restored: true, _binDirty: false
+    };
+    /* 原文件没存下来（配额不够）就没法重新转换，但正文还在 —— 说清楚，
+       别让人对着一本"能看不能传"的书猜。 */
+    if(!b.file) b.noFile = true;
+    /* PDF 的上传内容是 base64，没存（太占地方）—— 原文件在，就地重读一遍即可。 */
+    if(b.kind === 'pdf' && b.file){
+      b.state = 'loading'; b.stateLabel = '读取中';
+      const fr = new FileReader();
+      fr.onload = () => {
+        b.base64 = String(fr.result).split(',')[1] || '';
+        b.state = 'ready'; b.stateLabel = '已就绪';
+        try{ render(); }catch(e){}
+      };
+      fr.onerror = () => { b.state = 'err'; b.stateLabel = '读取失败'; try{ render(); }catch(e){} };
+      fr.readAsDataURL(b.file);
+    }
+    books.push(b);
+    n++;
+  }
+  if(!n) return false;
+  draftTouched = true;
+  const when = meta.get(ids[ids.length - 1]).savedAt || 0;
+  const ago = when ? Math.max(0, Math.round((Date.now() - when) / 60000)) : 0;
+  const whenTxt = ago < 1 ? '刚刚' : ago < 60 ? `${ago} 分钟前` : `${Math.round(ago / 60)} 小时前`;
+  log(`已恢复上次未完成的 ${n} 本书（存于${whenTxt}）：正文、配图${books.some(b => !b.noFile) ? '、原文件' : ''}都在，可直接继续`, 'ok');
+  if(books.some(b => b.noFile))
+    log('  其中有的书没有存下原文件（太大），能看能改正文，但重新转换和上传需要再拖一次原书', 'warn');
+  return true;
+}
+
+/** 彻底丢掉草稿（清空列表时调用） */
+async function dropDrafts(){
+  try{ await draftClear(); }catch(e){}
+}
+
+
+/* =========================================================================
+   13. 事件绑定与初始化
+   ========================================================================= */
+(function init(){
+  /* 本地存储：兼容旧版本的键名。
+   *
+   * 旧版用 `b2md_` 前缀 + JSON 序列化，重建后改成了 `b2m.` 前缀 + 纯字符串，
+   * 结果用户之前存的 Token 读不到了。这里做一次迁移：先按新键读，读不到再回退旧键
+   * （旧值是 JSON 字符串，需要 parse），读到后顺手写成新键。 */
+  const OLD_PREFIX = 'b2md_';
+  const readOld = k => {
+    try{
+      const raw = localStorage.getItem(OLD_PREFIX + k);
+      if(raw == null) return undefined;
+      try{ return JSON.parse(raw); }catch(e){ return raw; }   // 老数据是 JSON.parse 过的
+    }catch(e){ return undefined; }
+  };
+  const LS = {
+    get(k, d){
+      try{
+        const v = localStorage.getItem('b2m.' + k);
+        if(v != null) return v;
+      }catch(e){}
+      const old = readOld(k);
+      if(old !== undefined){
+        try{ localStorage.setItem('b2m.' + k, String(old)); }catch(e){}
+        return String(old);
+      }
+      return d;
+    },
+    set(k, v){ try{ localStorage.setItem('b2m.' + k, v); }catch(e){} }
+  };
+
+  // 旧版的键名对照
+  const v0 = LS.get('visibility', '');
+  $('token').value = LS.get('token', '');
+  $('repo').value = LS.get('repo', '');
+  $('visibility').checked = (v0 === '1' || v0 === 'true');
+  $('batchCommit').checked = LS.get('batch', '1') !== '0';
+  $('autoConvert').checked = LS.get('auto', '1') !== '0';
+  $('skipExistingAll').checked = LS.get('skip', '') === '1';
+  $('keepOrigAll').checked = LS.get('keepOrig', '') === '1';
+  skipExisting = $('skipExistingAll').checked;
+  useBatchCommit = $('batchCommit').checked;
+  autoConvert = $('autoConvert').checked;
+
+  // 迁移提示：旧版存的 Token 找到了就说明一声，免得以为"保存的信息不见了"
+  try{
+    if(readOld('token') && !$('token').value) log('未能恢复上次的 Token，请重新填写', 'warn');
+    else if($('token').value) log('已恢复上次保存的 Token 与仓库设置', 'ok');
+  }catch(e){}
+
+  $('token').addEventListener('change', () => LS.set('token', $('token').value.trim()));
+  $('repo').addEventListener('change', () => LS.set('repo', $('repo').value.trim()));
+  $('visibility').addEventListener('change', () => LS.set('visibility', $('visibility').checked ? '1' : ''));
+  $('batchCommit').addEventListener('change', () => { useBatchCommit = $('batchCommit').checked; LS.set('batch', useBatchCommit ? '1' : '0'); });
+  $('autoConvert').addEventListener('change', () => { autoConvert = $('autoConvert').checked; LS.set('auto', autoConvert ? '1' : '0'); });
+  $('skipExistingAll').addEventListener('change', () => { skipExisting = $('skipExistingAll').checked; LS.set('skip', skipExisting ? '1' : ''); });
+  /* 勾上/取消"保留原件"要立刻同步到已添加的书。
+     以前只在加书那一刻读一次勾选框，之后改框对已加的书完全无效 ——
+     用户以为勾上了、上传后却没有原件，只能怀疑是工具没生效。 */
+  $('keepOrigAll').addEventListener('change', () => {
+    const on = $('keepOrigAll').checked;
+    LS.set('keepOrig', on ? '1' : '');
+    books.forEach(b => { if(b.kind === 'epub') b.keepOrig = on; });
+    log(on ? '已勾上「保留 EPUB 原件」：现有和后续加入的书都会一并上传 .epub 原件'
+           : '已取消「保留 EPUB 原件」：只传 Markdown 和配图', 'info');
+  });
+
+  $('uploadAll').onclick = uploadAll;
+  $('convertAll').onclick = convertAll;
+  $('clearAll').onclick = () => {
+    books.forEach(releaseImgUrls);
+    books.length = 0; sharedRepoInfo = null; render();
+    dropDrafts();       // 列表清空 = 草稿也一起丢，别让刷新后又冒出来
+    log('已清空列表（草稿也一起删了）', 'info');
+  };
+  $('refreshBtn').onclick = async () => {
+    const token = $('token').value.trim(), repo = $('repo').value.trim();
+    if(!token || !repo) return alert('请先填写 Token 和仓库名');
+    try{
+      const info = await repoInfo(token, repo);
+      sharedRepoInfo = Object.assign(info, { key: repo.trim() });
+      $('repoDot').classList.add('on');
+      const files = await listAllFiles(token, info);
+      log(`仓库 ${info.full} 现有 ${files.length} 个文件，分支 ${info.default_branch}`, 'ok');
+      progEnd(`仓库 ${info.full}：${files.length} 个文件`);
+    }catch(e){
+      log(`✗ ${e.friendly || e.message}`, 'err');
+      $('logBox').open = true;
+    }
+  };
+
+  $('rebuildBtn').onclick = rebuildReadme;
+  $('manageBtn').onclick = () => {
+    const p = $('repoPanel');
+    const show = p.style.display === 'none';
+    p.style.display = show ? '' : 'none';
+    if(show) loadRepoBooks();
+  };
+  $('rpReload').onclick = () => loadRepoBooks();
+  $('rpClose').onclick = () => { $('repoPanel').style.display = 'none'; };
+
+  const drop = $('drop'), input = $('fileInput');
+  drop.onclick = () => input.click();
+  input.onchange = () => { if(input.files.length) addFiles([...input.files]); input.value = ''; };
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => {
+    const fs = [...(e.dataTransfer?.files || [])];
+    if(fs.length) addFiles(fs);
+  });
+
+  // 启动时把关键信息写进日志，用户一看就知道自己打开的是哪个版本、
+  // 浏览器能力够不够。凡是出问题可能是“缓存了旧版”或「浏览器太旧」，
+  // 先看这两行比什么都有效。
+  try{
+    const v = document.documentElement.dataset.v || '未标注';
+    log(`book2md v${v} 已加载 · 浏览器 ${navigator.userAgent.slice(0, 50)}`, 'info');
+    if(typeof DecompressionStream === 'function') log('压缩解压：可用（内置 API）', 'ok');
+    else log('压缩解压：不可用（浏览器过旧）', 'err');
+    // 直接打开本地文件时，部分浏览器会禁用 file:// 页面的本地存储，导致 Token 保不住、
+    // 还有些会拒绝 fetch 到 file://。提醒一下就能省很多问题的排查时间。
+    if(location.protocol === 'file:'){
+      log('目前用直接打开文件的方式运行。若 Token 无法保存或上传失败，请改用本页最下方的 Python 服务访问（http://127.0.0.1:8787）', 'info');
+    }
+    /* 这个设置是持久化的，很容易"忘了自己勾过"，然后重传什么都更新不了。
+       启动就说清楚，比等用户发现 GitHub 上没变化再回头猜省事得多。 */
+    if($('skipExistingAll').checked){
+      log('⚠ 「已存在文件一律不覆盖」当前是勾上的：重传已上传的书，内容变了也不会提交，GitHub 上不会有新记录。想更新请先取消勾选。', 'warn');
+      $('logBox').open = true;
+    }
+  }catch(e){}
+
+  // 浏览器能力预检：不支持 DecompressionStream 就无法读 EPUB，
+  // 提前告知比让用户很久才看到“没反应”好了。
+  try{
+    if(typeof DecompressionStream !== 'function'){
+      log('⚠ 当前浏览器过旧，无法解压 EPUB。请用 Chrome 80+ / Edge 80+ / Safari 16.4+ / Firefox 113+ 。', 'err');
+      $('fileInput').disabled = true;
+      $('drop').style.opacity = '.5';
+      $('drop').style.pointerEvents = 'none';
+    }
+  }catch(e){}
+
+  /* 按钮的可用状态跟 Token / 仓库名挂钩。以前只监听 change（失焦才触发），
+     用户刚填完还没点别处时，"读取仓库""管理仓库书籍"一直是灰的，看着像坏了。 */
+  ['token', 'repo'].forEach(id => $(id).addEventListener('input', updateButtonsAndSummary));
+
+  render();
+  progIdle('空闲');
+
+  /* 草稿恢复放在最后：先让界面完整画出来，再把上次没做完的书读回来重画一次。
+     读不到就是没有草稿，一句话也不用说 —— 只有真的恢复了才值得占一行日志。 */
+  restoreDrafts().then(ok => {
+    if(ok){ render(); $('logBox').open = true; }
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>
