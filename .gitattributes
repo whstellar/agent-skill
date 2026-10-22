@@ -1,6 +1,15 @@
-# book2md 项目自身
-# 测试样本是二进制资源：不进语言统计，diff 里折叠
-samples/*.epub binary linguist-vendored
-samples/*.pdf binary linguist-vendored
-samples/*.jpg binary linguist-vendored
-samples/*.png binary linguist-vendored
+# 由 book2md 自动维护 —— 可改，下次重建首页时会补回来
+# 封面：自动生成的文字封面，不进语言统计
+cover.svg linguist-generated
+# 资源文件：二进制内容，不进语言统计，也不刷 diff
+*.jpg binary linguist-vendored
+*.jpeg binary linguist-vendored
+*.png binary linguist-vendored
+*.gif binary linguist-vendored
+*.webp binary linguist-vendored
+*.svg binary linguist-vendored
+*.epub binary linguist-vendored
+*.pdf binary linguist-vendored
+*.mobi binary linguist-vendored
+*.azw3 binary linguist-vendored
+*.djvu binary linguist-vendored
