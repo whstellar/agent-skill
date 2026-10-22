@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-python-multipart
-pymupdf
-ebooklib
-markdownify
-beautifulsoup4
-PyGithub
-lxml
