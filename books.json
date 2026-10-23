@@ -10,5 +10,17 @@
     "pdf": false,
     "epub": false,
     "updated": "2026-10-23"
+  },
+  "小岛-skill": {
+    "title": "小岛经济学",
+    "author": "彼得·希夫",
+    "publisher": "中信出版社",
+    "language": "zh",
+    "chars": 87362,
+    "images": 187,
+    "cover": "cover.jpeg",
+    "pdf": false,
+    "epub": false,
+    "updated": "2026-10-23"
   }
 }
