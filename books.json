@@ -22,5 +22,17 @@
     "pdf": false,
     "epub": false,
     "updated": "2026-10-23"
+  },
+  "都-skill": {
+    "title": "废都(海外未删节版)",
+    "author": "贾凹平",
+    "publisher": "epub掌上书苑",
+    "language": "zh_CN",
+    "chars": 374668,
+    "images": 1,
+    "cover": "cover.jpg",
+    "pdf": false,
+    "epub": false,
+    "updated": "2026-10-26"
   }
 }
