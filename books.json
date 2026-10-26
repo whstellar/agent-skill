@@ -46,5 +46,17 @@
     "pdf": false,
     "epub": false,
     "updated": "2026-10-26"
+  },
+  "查理-skill": {
+    "title": "穷查理宝典（珍藏版）（1+2册）",
+    "author": "[美]查理·芒格",
+    "publisher": "中信出版社",
+    "language": "zh-CN",
+    "chars": 177512,
+    "images": 42,
+    "cover": "cover.jpg",
+    "pdf": false,
+    "epub": false,
+    "updated": "2026-10-26"
   }
 }
