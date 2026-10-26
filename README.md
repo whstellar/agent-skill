@@ -2,9 +2,9 @@
 
 # agent skill
 
-共 **4** 个 · 约 **112.2 万字** · **753** 张配图
+共 **5** 个 · 约 **130 万字** · **795** 张配图
 
-<sub>最近更新 2026-10-26 21:58</sub>
+<sub>最近更新 2026-10-26 22:03</sub>
 
 </div>
 
@@ -18,6 +18,7 @@
 
 | 封面 | 名称 | 文件 | 规模 |
 |:---:|---|---|---|
+| <img src="查理-skill/cover.jpg" width="76" alt="穷查理宝典（珍藏版）（1+2册）"> | <a href="查理-skill/"><b>穷查理宝典（珍藏版）（1+2册）</b></a><br><sub>[美]查理·芒格 · 中信出版社</sub> | [md](查理-skill/查理-skill.md) | 17.8 万字<br>42 图<br><sub>2026-10-26</sub> |
 | <img src="都-skill/cover.jpg" width="76" alt="废都(海外未删节版)"> | <a href="都-skill/"><b>废都(海外未删节版)</b></a><br><sub>贾凹平 · epub掌上书苑</sub> | [md](都-skill/都-skill.md) | 37.5 万字<br>1 图<br><sub>2026-10-26</sub> |
 | <img src="牛可-skill/cover.jpeg" width="76" alt="牛奶可乐经济学(完整版)"> | <a href="牛可-skill/"><b>牛奶可乐经济学(完整版)</b></a><br><sub>罗伯特·弗兰克 · 中国人民大学出版社</sub> | [md](牛可-skill/牛可-skill.md) | 12.5 万字<br>34 图<br><sub>2026-10-23</sub> |
 | <img src="微观-skill/cover.jpg" width="76" alt="微观经济学（第三版）"> | <a href="微观-skill/"><b>微观经济学（第三版）</b></a><br><sub>【美】达龙·阿西莫格鲁；戴维·莱布森；约翰·A.李斯特</sub> | [md](微观-skill/微观-skill.md) | 53.5 万字<br>531 图<br><sub>2026-10-26</sub> |
