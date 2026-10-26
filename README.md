@@ -2,9 +2,9 @@
 
 # agent skill
 
-共 **5** 个 · 约 **130 万字** · **795** 张配图
+共 **6** 个 · 约 **148.4 万字** · **819** 张配图
 
-<sub>最近更新 2026-10-26 22:03</sub>
+<sub>最近更新 2026-10-26 22:08</sub>
 
 </div>
 
@@ -23,6 +23,7 @@
 | <img src="牛可-skill/cover.jpeg" width="76" alt="牛奶可乐经济学(完整版)"> | <a href="牛可-skill/"><b>牛奶可乐经济学(完整版)</b></a><br><sub>罗伯特·弗兰克 · 中国人民大学出版社</sub> | [md](牛可-skill/牛可-skill.md) | 12.5 万字<br>34 图<br><sub>2026-10-23</sub> |
 | <img src="微观-skill/cover.jpg" width="76" alt="微观经济学（第三版）"> | <a href="微观-skill/"><b>微观经济学（第三版）</b></a><br><sub>【美】达龙·阿西莫格鲁；戴维·莱布森；约翰·A.李斯特</sub> | [md](微观-skill/微观-skill.md) | 53.5 万字<br>531 图<br><sub>2026-10-26</sub> |
 | <img src="小岛-skill/cover.jpeg" width="76" alt="小岛经济学"> | <a href="小岛-skill/"><b>小岛经济学</b></a><br><sub>彼得·希夫 · 中信出版社</sub> | [md](小岛-skill/小岛-skill.md) | 8.7 万字<br>187 图<br><sub>2026-10-23</sub> |
+| <img src="小狗-skill/cover.jpg" width="76" alt="小狗钱钱（套装全2册）"> | <a href="小狗-skill/"><b>小狗钱钱（套装全2册）</b></a><br><sub>[德] 博多·舍费尔 · 四川少年儿童出版社</sub> | [md](小狗-skill/小狗-skill.md) | 18.5 万字<br>24 图<br><sub>2026-10-26</sub> |
 
 ---
 
