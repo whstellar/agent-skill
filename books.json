@@ -58,5 +58,17 @@
     "pdf": false,
     "epub": false,
     "updated": "2026-10-26"
+  },
+  "小狗-skill": {
+    "title": "小狗钱钱（套装全2册）",
+    "author": "[德] 博多·舍费尔",
+    "publisher": "四川少年儿童出版社",
+    "language": "zh",
+    "chars": 184914,
+    "images": 24,
+    "cover": "cover.jpg",
+    "pdf": false,
+    "epub": false,
+    "updated": "2026-10-26"
   }
 }
