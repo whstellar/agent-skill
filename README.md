@@ -2,9 +2,9 @@
 
 # agent skill
 
-共 **3** 个 · 约 **58.7 万字** · **222** 张配图
+共 **4** 个 · 约 **112.2 万字** · **753** 张配图
 
-<sub>最近更新 2026-10-26 21:39</sub>
+<sub>最近更新 2026-10-26 21:47</sub>
 
 </div>
 
@@ -20,6 +20,7 @@
 |:---:|---|---|---|
 | <img src="都-skill/cover.jpg" width="76" alt="废都(海外未删节版)"> | <a href="都-skill/都-skill.md"><b>废都(海外未删节版)</b></a><br><sub>贾凹平 · epub掌上书苑</sub> | [md](都-skill/都-skill.md) | 37.5 万字<br>1 图<br><sub>2026-10-26</sub> |
 | <img src="牛可-skill/cover.jpeg" width="76" alt="牛奶可乐经济学(完整版)"> | <a href="牛可-skill/牛可-skill.md"><b>牛奶可乐经济学(完整版)</b></a><br><sub>罗伯特·弗兰克 · 中国人民大学出版社</sub> | [md](牛可-skill/牛可-skill.md) | 12.5 万字<br>34 图<br><sub>2026-10-23</sub> |
+| <img src="微观-skill/cover.jpg" width="76" alt="微观经济学（第三版）"> | <a href="微观-skill/微观-skill.md"><b>微观经济学（第三版）</b></a><br><sub>【美】达龙·阿西莫格鲁；戴维·莱布森；约翰·A.李斯特</sub> | [md](微观-skill/微观-skill.md) | 53.5 万字<br>531 图<br><sub>2026-10-26</sub> |
 | <img src="小岛-skill/cover.jpeg" width="76" alt="小岛经济学"> | <a href="小岛-skill/小岛-skill.md"><b>小岛经济学</b></a><br><sub>彼得·希夫 · 中信出版社</sub> | [md](小岛-skill/小岛-skill.md) | 8.7 万字<br>187 图<br><sub>2026-10-23</sub> |
 
 ---
