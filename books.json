@@ -34,5 +34,17 @@
     "pdf": false,
     "epub": false,
     "updated": "2026-10-26"
+  },
+  "微观-skill": {
+    "title": "微观经济学（第三版）",
+    "author": "【美】达龙·阿西莫格鲁；戴维·莱布森；约翰·A.李斯特",
+    "publisher": "",
+    "language": "zh",
+    "chars": 534676,
+    "images": 531,
+    "cover": "cover.jpg",
+    "pdf": false,
+    "epub": false,
+    "updated": "2026-10-26"
   }
 }
